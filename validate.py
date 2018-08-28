@@ -46,23 +46,77 @@ def lower_first(iterator):
 from dotenv import load_dotenv
 load_dotenv()
 
-def load_CSV_to_dict(infile):
-    data = pd.read_csv(infile, delimiter=',')
+def load_CSV_to_dict(infile, indexname):
+    df = pd.read_csv(infile, delimiter=',')
     # Lower case headers
-    data.columns = map(str.lower, data.columns)
-    return data
+    df.columns = map(str.lower, df.columns)
+    df = df.fillna('No data provided')
+    return df.set_index(indexname, drop=False)
 
 def load_CSV():
-    SISDict = load_CSV_to_dict(SISFile)
-    UnizinDict = load_CSV_to_dict(UnizinFile)
+    SIS_df = load_CSV_to_dict(SISFile, 'sisintid')
+    Unizin_df = load_CSV_to_dict(UnizinFile,'sisintid')
 
-    SISDict.sort_values(by=['sisintid'])
-    UnizinDict.sort_values(by=['sisintid'])
-    for i, r in SISDict.iterrows():
-        print (UnizinDict.iloc[i]['sisintid'],SISDict.iloc[i]['sisintid'])
+    print ("Unizin Len:", len(Unizin_df))
+    print ("SIS Len", len(SIS_df))
+
+    Unizin_head = list(Unizin_df)
+    print (Unizin_head)
+
+    for i, SIS_r in SIS_df.iterrows():
+        #Look at all the unizin headers and compare
+        sisintid = SIS_r['sisintid'].strip()
+        if not sisintid:
+            continue
+#        print ("Checking sisintid", sisintid)
+        try: 
+            Unizin_r = Unizin_df.loc[sisintid]
+        except:
+            #print ("SisIntId not found in Unizin Data CSV",sisintid)
+            continue
+
+        for head in Unizin_head:
+            try:
+                if SIS_r[head] != Unizin_r[head]:
+                    print(head," does not match for ",sisintid,SIS_r[head],Unizin_r[head])
+                else:
+                    print(head," matches")
+            except:
+                continue
 
 
-def load_Unizin_to_CSV():
+def load_Unizin_Calendar_to_CSV
+    query = """SELECT
+              OrganizationCalendarSession.OrganizationCalendarSessionId as TermId,
+              RefSessionType.Description as SessionType,
+              OrganizationCalendarSession.SessionName as SessionName,
+              OrganizationCalendarSession.BeginDate as TermBeginDate,
+              OrganizationCalendarSession.EndDate as TermEndDate,
+              OrganizationCalendarSession.FirstInstructionDate as InstrBeginDate,
+              OrganizationCalendarSession.LastInstructionDate as InstrEndDate
+            FROM OrganizationCalendarSession
+              LEFT JOIN RefSessionType on RefSessionType.RefSessionTypeId=OrganizationCalendarSession.RefSessionTypeId
+    """
+def load_Unizin_Course_to_CSV
+    query = """SELECT
+              Course.OrganizationId as CourseId,
+              PsCourse.OrganizationCalendarSessionId as TermId,
+              Course.SubjectAbbreviation as CourseSubj,
+              PsCourse.CourseNumber as CourseNo,
+              PsCourse.CourseTitle as Title,
+              Course.Description as Description,
+              Course.CreditValue as AvailableCredits,
+              RefWorkflowState.Description as Status,
+              OrganizationCalendarSession.SessionName,
+              RefSessionType.Description as SessionType
+            FROM Course
+              LEFT JOIN PsCourse on PsCourse.OrganizationId=Course.OrganizationId
+              LEFT JOIN OrganizationCalendarSession on OrganizationCalendarSession.OrganizationCalendarSessionId=PsCourse.OrganizationCalendarSessionId
+              LEFT JOIN RefCourseCreditUnit on RefCourseCreditUnit.RefCourseCreditUnitId=Course.RefCourseCreditUnitId
+              LEFT JOIN RefWorkflowState on RefWorkflowState.RefWorkflowStateId=Course.RefWorkflowStateId
+              LEFT JOIN RefSessionType on RefSessionType.RefSessionTypeId=OrganizationCalendarSession.RefSessionTypeId;
+              """
+def load_Unizin_Person_to_CSV():
     conn = psycopg2.connect(os.getenv("DSN"))
 
     print("Encoding for this connection is", conn.encoding)
@@ -88,7 +142,7 @@ def load_Unizin_to_CSV():
                 PersonTelephone.TelephoneNumber as PhoneNumber,
                 RefPersonTelephoneNumberType.Description as PhoneType,
                 PersonEmailAddress.EmailAddress as EmailAddress,
-                RefEmailType.Description as EmailType
+                RefEmailType.Code as EmailType
 
                 FROM Person
                 LEFT JOIN RefSex on RefSex.RefSexId=Person.RefSexId
