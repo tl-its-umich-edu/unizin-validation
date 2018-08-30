@@ -47,9 +47,11 @@ def lower_first(iterator):
     return itertools.chain([next(iterator).lower()], iterator)
 
 def load_CSV_to_dict(infile, indexname):
-    df = pd.read_csv(infile, delimiter=',')
+    df = pd.read_csv(infile, delimiter=',', dtype=str)
     # Lower case headers
     df.columns = map(str.lower, df.columns)
+    df[indexname] = pd.to_numeric(df[indexname], errors='coerce')
+
     df = df.fillna('NoData')
     return df.set_index(indexname, drop=False)
 
@@ -57,9 +59,11 @@ def compare_CSV(tablename):
     SIS_df = load_CSV_to_dict(SIS_FILE.format(table=tablename), 'sisintid')
     Unizin_df = load_CSV_to_dict(UNIZIN_FILE.format(table=tablename),'sisintid')
 
+    print (Unizin_df.dtypes,SIS_df.dtypes)
     print ("Unizin Len:", len(Unizin_df))
     print ("SIS Len", len(SIS_df))
 
+    exit()
     Unizin_head = list(Unizin_df)
     print (Unizin_head)
 
@@ -68,7 +72,6 @@ def compare_CSV(tablename):
         sisintid = SIS_r['sisintid'].strip()
         if not sisintid:
             continue
-#        print ("Checking sisintid", sisintid)
         try: 
             Unizin_r = Unizin_df.loc[sisintid]
         except:
@@ -78,7 +81,7 @@ def compare_CSV(tablename):
         for head in Unizin_head:
             try:
                 if SIS_r[head] != Unizin_r[head]:
-                    print(head," does not match for ",sisintid,SIS_r[head],Unizin_r[head])
+                    print(f"{head} does not match for {sisintid} SIS: {SIS_r[head]} Unizin: {Unizin_r[head]}")
             except:
                 continue
 
@@ -91,7 +94,7 @@ def load_Unizin_to_CSV(tablename):
     UWriter = open(UNIZIN_FILE.format(table=tablename),"w")
     curs.copy_expert(outputquery, UWriter)
 
-print ("Choose an option.\n1 = load CSV files, 2 = load Unizin Data to CSV (need developer VPN or other connection setup), 3 = Compare SIS CSV and Unizin CSV files (need 1 and 2)")
+print ("Choose an option.\n1 = Load/Compare CSV files, 2 = load Unizin Data to CSV (need developer VPN or other connection setup), 3 = Option 3")
 option = input()
 
 if option == "1":
