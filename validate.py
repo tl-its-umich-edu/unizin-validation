@@ -17,7 +17,8 @@
 ## put in DSN your DSN string (This should come from the .env file)
 DSN = 'dbname=test'
 
-SIS_FILE = '2018-08-27%2FPerson_2018-08-27.csv'
+date = "2018-08-27"
+SIS_FILE = '{date}%2FPerson_{date}.csv'.format(date=date)
 UNIZIN_FILE = "unizin_{table}.csv"
 
 ## don't modify anything below this line (except for experimenting)
@@ -56,20 +57,25 @@ def load_CSV_to_dict(infile, indexname):
     return df.set_index(indexname, drop=False)
 
 def compare_CSV(tablename):
-    SIS_df = load_CSV_to_dict(SIS_FILE.format(table=tablename), 'sisintid')
-    Unizin_df = load_CSV_to_dict(UNIZIN_FILE.format(table=tablename),'sisintid')
+    try:    
+        SIS_df = load_CSV_to_dict(SIS_FILE.format(table=tablename), 'sisintid')
+        Unizin_df = load_CSV_to_dict(UNIZIN_FILE.format(table=tablename),'sisintid')
+    except Exception as e:
+        print ("Exception ",e)
+        return
+
 
     print (Unizin_df.dtypes,SIS_df.dtypes)
     print ("Unizin Len:", len(Unizin_df))
     print ("SIS Len", len(SIS_df))
 
-    exit()
     Unizin_head = list(Unizin_df)
     print (Unizin_head)
+    f = open("results.txt", "w")
 
     for i, SIS_r in SIS_df.iterrows():
         #Look at all the unizin headers and compare
-        sisintid = SIS_r['sisintid'].strip()
+        sisintid = SIS_r['sisintid']
         if not sisintid:
             continue
         try: 
@@ -81,26 +87,33 @@ def compare_CSV(tablename):
         for head in Unizin_head:
             try:
                 if SIS_r[head] != Unizin_r[head]:
-                    print(f"{head} does not match for {sisintid} SIS: {SIS_r[head]} Unizin: {Unizin_r[head]}")
+                    f.write(f"{head} does not match for {sisintid} SIS: {SIS_r[head]} Unizin: {Unizin_r[head]}\n")
             except:
                 continue
 
 
 def load_Unizin_to_CSV(tablename):
+    out_filename = UNIZIN_FILE.format(table=tablename)
+    print (f"Loading ucdm {tablename} table to {out_filename}")
     conn = psycopg2.connect(os.getenv("DSN"))
     curs = conn.cursor()
 
     outputquery = "COPY ({0}) TO STDOUT WITH CSV HEADER FORCE QUOTE *".format(dbqueries.QUERY[tablename])
-    UWriter = open(UNIZIN_FILE.format(table=tablename),"w")
+    UWriter = open(out_filename,"w")
     curs.copy_expert(outputquery, UWriter)
 
-print ("Choose an option.\n1 = Load/Compare CSV files, 2 = load Unizin Data to CSV (need developer VPN or other connection setup), 3 = Option 3")
+print ("""Choose an option.
+    1 = Import Unizin Data from GCloud to CSV (need developer VPN or other connection setup)
+    2 = Load/Compare CSV files
+    3 = Option 3""")
 option = input()
 
 if option == "1":
-    compare_CSV('person')
+    for key in dbqueries.QUERY.keys():
+       load_Unizin_to_CSV(key)
 if option == "2":
-    load_Unizin_to_CSV('person')
+    for key in dbqueries.QUERY.keys():
+       compare_CSV(key)
 if option == "3":
     print ("Option 3")
 
