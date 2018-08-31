@@ -55,7 +55,10 @@ def load_CSV_to_dict(infile, indexname):
     df = df.fillna('NoData')
     return df.set_index(indexname, drop=False)
 
+RESULTS_FILE = open("results.txt", "w")
+
 def compare_CSV(tablename):
+    RESULTS_FILE.write(f"Comparing on {tablename}\n")
     sis_file = dbqueries.QUERIES[tablename]['sis_file'].format(date=SIS_DATE)
     index = dbqueries.QUERIES[tablename]['index']
     try:    
@@ -70,18 +73,17 @@ def compare_CSV(tablename):
     print ("SIS Len", len(SIS_df))
 
     if len(Unizin_df) == 0 or len(SIS_df) == 0:
-        print (f"This table {tablename} has a empty record for at least one dataset, skipping")
+        RESULTS_FILE.write(f"This table {tablename} has a empty record for at least one dataset, skipping\n")
         return
 
     lendiff = len(Unizin_df) - len(SIS_df)
     if lendiff > 0:
-        print ("Unizin has %d more rows than SIS for this record" % abs(lendiff))
+        RESULTS_FILE.write("Unizin has %d more rows than SIS for this record\n" % abs(lendiff))
     elif lendiff < 0:
-        print ("SIS has %d more rows than SIS for this record" % abs(lendiff))
+        RESULTS_FILE.write("SIS has %d more rows than SIS for this record\n" % abs(lendiff))
 
     Unizin_head = list(Unizin_df)
     print (Unizin_head)
-    f = open("results.txt", "w")
 
     for i, SIS_r in SIS_df.iterrows():
         #Look at all the unizin headers and compare
@@ -96,7 +98,7 @@ def compare_CSV(tablename):
         for head in Unizin_head:
             try:
                 if SIS_r[head] != Unizin_r[head]:
-                    f.write(f"{head} does not match for {indexval} SIS: {SIS_r[head]} Unizin: {Unizin_r[head]}\n")
+                    RESULTS_FILE.write(f"{head} does not match for {indexval} SIS: {SIS_r[head]} Unizin: {Unizin_r[head]}\n")
             except:
                 continue
 

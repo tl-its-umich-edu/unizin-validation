@@ -77,7 +77,7 @@ QUERIES = {
               CourseSection.CourseId as CourseId,
               CourseSection.OrganizationCalendarSessionId as TermId,
               PsSection.SectionNumber as SectionNumber,
-              RefCourseSectionDeliveryMode.Description as DeliveryMode,
+              RefCourseSectionDeliveryMode.Code as DeliveryMode,
               CourseSection.MaximumCapacity as MaxEnrollment,
               Organization.Name as Name,
               OrganizationCalendarSession.BeginDate as BeginDate,
