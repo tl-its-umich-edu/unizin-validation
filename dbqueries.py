@@ -133,14 +133,14 @@ QUERIES = {
               PsStudentSection.NumberOfCreditsTaken as CreditsTaken,
               PsStudentSection.NumberOfCreditsEarned as CreditsEarned,
               -- Completed at??
-              RefWorkflowState.Description as WorkflowState
+              -- RefWorkflowState.Description as WorkflowState
+              'TODO' as WorkflowState
               -- Self-enrolled?
             FROM OrganizationPersonRole
-              INNER JOIN CourseSection on CourseSection.OrganizationId=OrganizationPersonRole.OrganizationPersonRoleId
               INNER JOIN Role on Role.RoleId=OrganizationPersonRole.RoleId
               INNER JOIN RoleStatus on RoleStatus.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
               INNER JOIN RefRoleStatus on RefRoleStatus.RefRoleStatusId=RoleStatus.RefRoleStatusId
               INNER JOIN PsStudentSection on PsStudentSection.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
-              INNER JOIN RefWorkflowState on RefWorkflowState.RefWorkflowStateId=OrganizationPersonRole.RefWorkflowStateId
+              -- INNER JOIN RefWorkflowState on RefWorkflowState.RefWorkflowStateId=OrganizationPersonRole.RefWorkflowStateId
   """},
 }
