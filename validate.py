@@ -17,8 +17,7 @@
 ## put in DSN your DSN string (This should come from the .env file)
 DSN = 'dbname=test'
 
-date = "2018-08-27"
-SIS_FILE = '{date}%2FPerson_{date}.csv'.format(date=date)
+SIS_DATE = "2018-08-26"
 UNIZIN_FILE = "unizin_{table}.csv"
 
 ## don't modify anything below this line (except for experimenting)
@@ -57,9 +56,11 @@ def load_CSV_to_dict(infile, indexname):
     return df.set_index(indexname, drop=False)
 
 def compare_CSV(tablename):
+    sis_file = dbqueries.QUERIES[tablename]['sis_file'].format(date=SIS_DATE)
+    index = dbqueries.QUERIES[tablename]['index']
     try:    
-        SIS_df = load_CSV_to_dict(SIS_FILE.format(table=tablename), 'sisintid')
-        Unizin_df = load_CSV_to_dict(UNIZIN_FILE.format(table=tablename),'sisintid')
+        SIS_df = load_CSV_to_dict(sis_file.format(table=tablename), index)
+        Unizin_df = load_CSV_to_dict(UNIZIN_FILE.format(table=tablename), index)
     except Exception as e:
         print ("Exception ",e)
         return
@@ -75,19 +76,18 @@ def compare_CSV(tablename):
 
     for i, SIS_r in SIS_df.iterrows():
         #Look at all the unizin headers and compare
-        sisintid = SIS_r['sisintid']
-        if not sisintid:
+        indexval = SIS_r[index]
+        if not indexval:
             continue
         try: 
-            Unizin_r = Unizin_df.loc[sisintid]
+            Unizin_r = Unizin_df.loc[indexval]
         except:
-            #print ("SisIntId not found in Unizin Data CSV",sisintid)
             continue
 
         for head in Unizin_head:
             try:
                 if SIS_r[head] != Unizin_r[head]:
-                    f.write(f"{head} does not match for {sisintid} SIS: {SIS_r[head]} Unizin: {Unizin_r[head]}\n")
+                    f.write(f"{head} does not match for {indexval} SIS: {SIS_r[head]} Unizin: {Unizin_r[head]}\n")
             except:
                 continue
 
@@ -98,7 +98,7 @@ def load_Unizin_to_CSV(tablename):
     conn = psycopg2.connect(os.getenv("DSN"))
     curs = conn.cursor()
 
-    outputquery = "COPY ({0}) TO STDOUT WITH CSV HEADER FORCE QUOTE *".format(dbqueries.QUERY[tablename])
+    outputquery = "COPY ({0}) TO STDOUT WITH CSV HEADER FORCE QUOTE *".format(dbqueries.QUERIES[tablename]['query'])
     UWriter = open(out_filename,"w")
     curs.copy_expert(outputquery, UWriter)
 
@@ -109,10 +109,10 @@ print ("""Choose an option.
 option = input()
 
 if option == "1":
-    for key in dbqueries.QUERY.keys():
+    for key in dbqueries.QUERIES.keys():
        load_Unizin_to_CSV(key)
 if option == "2":
-    for key in dbqueries.QUERY.keys():
+    for key in dbqueries.QUERIES.keys():
        compare_CSV(key)
 if option == "3":
     print ("Option 3")
