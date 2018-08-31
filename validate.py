@@ -65,7 +65,7 @@ def compare_CSV(tablename):
         print ("Exception ",e)
         return
 
-    print (Unizin_df.dtypes,SIS_df.dtypes)
+    #print (Unizin_df.dtypes,SIS_df.dtypes)
     print ("Unizin Len:", len(Unizin_df))
     print ("SIS Len", len(SIS_df))
 
@@ -73,12 +73,11 @@ def compare_CSV(tablename):
         print (f"This table {tablename} has a empty record for at least one dataset, skipping")
         return
 
-    if len(Unizin_df) > len(SIS_df):
-        print ("Unizin has more data than SIS for this record")
-    elif len(Unizin_df) < len(SIS_df):
-        print ("SIS has more data than SIS for this record")
-    else: 
-        print ("SIS and Unizin match for this record")
+    lendiff = len(Unizin_df) - len(SIS_df)
+    if lendiff > 0:
+        print ("Unizin has %d more rows than SIS for this record" % abs(lendiff))
+    elif lendiff < 0:
+        print ("SIS has %d more rows than SIS for this record" % abs(lendiff))
 
     Unizin_head = list(Unizin_df)
     print (Unizin_head)
