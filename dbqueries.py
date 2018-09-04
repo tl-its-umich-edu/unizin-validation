@@ -129,7 +129,7 @@ QUERIES = {
               OrganizationPersonRole.PersonId as PersonId,
               ucdmint.sourcekey as SectionId,
               Role.Name as Role,
-              RefRoleStatus.Description as RoleStatus,
+              RefRoleStatus.Code as RoleStatus,
               to_char(OrganizationPersonRole.EntryDate,'YYYY-MM-DD') as EntryDate,
               to_char(OrganizationPersonRole.ExitDate,'YYYY-MM-DD') as ExitDate,
               PsStudentSection.NumberOfCreditsTaken as CreditsTaken,
@@ -140,8 +140,8 @@ QUERIES = {
             FROM OrganizationPersonRole
               INNER JOIN Role on Role.RoleId=OrganizationPersonRole.RoleId
               INNER JOIN RoleStatus on RoleStatus.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
-              INNER JOIN RefRoleStatus on RefRoleStatus.RefRoleStatusId=RoleStatus.RefRoleStatusId
-              INNER JOIN PsStudentSection on PsStudentSection.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+              LEFT JOIN RefRoleStatus on RefRoleStatus.RefRoleStatusId=RoleStatus.RefRoleStatusId
+              LEFT JOIN PsStudentSection on PsStudentSection.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
               -- INNER JOIN RefWorkflowState on RefWorkflowState.RefWorkflowStateId=OrganizationPersonRole.RefWorkflowStateId
               LEFT JOIN ucdmentitykeymap ucdmint on ucdmint.ucdmkey = OrganizationPersonRole.OrganizationId and ucdmint.ucdmentityid = 5 and ucdmint.systemprovisioningid = 1000
               LEFT JOIN ucdmentitykeymap ucdmext on ucdmext.ucdmkey = OrganizationPersonRole.OrganizationId and ucdmext.ucdmentityid = 5 and ucdmext.systemprovisioningid = 1001

@@ -5,8 +5,10 @@ These scripts are used for validating that the SIS data loaded into Unizin is co
 
 It needs a .env file configured with the record(s) below. In addition to connect to this database at all you'll likely need a VPN.
 
-#This configures the PostGres DSN to the entity store for the SIS data
+# This configures the PostGres DSN to the entity store for the SIS data
 DSN=dbname=entity_store host=192.168.0.1 user=user_readonly password=user_password connect_timeout=5
+# This configures the current date of the SIS CSV files
+SIS_DATE=2018-09-03
 
 TODO: 
 Add automatic download from S3 bucket for SIS CSV files using boto3

@@ -14,10 +14,6 @@
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 # License for more details.
 
-## put in DSN your DSN string (This should come from the .env file)
-DSN = 'dbname=test'
-
-SIS_DATE = "2018-08-26"
 UNIZIN_FILE = "unizin_{table}.csv"
 
 ## don't modify anything below this line (except for experimenting)
@@ -61,7 +57,7 @@ RESULTS_FILE = open("results.txt", "w")
 
 def compare_CSV(tablename):
     RESULTS_FILE.write(f"Comparing on {tablename}\n")
-    sis_file = dbqueries.QUERIES[tablename]['sis_file'].format(date=SIS_DATE)
+    sis_file = dbqueries.QUERIES[tablename]['sis_file'].format(date=os.getenv("SIS_DATE"))
     index = dbqueries.QUERIES[tablename]['index']
     try:    
         SIS_df = load_CSV_to_dict(sis_file.format(table=tablename), index)
