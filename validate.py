@@ -76,9 +76,6 @@ def compare_CSV(tablename):
 #    print (SIS_df)
 #    print (Unizin_df)
     
-    RESULTS_FILE.write("First 5 rows",SIS_df.index.tolist()[:5])
-    RESULTS_FILE.write("First 5 rows",Unizin_df.index.tolist()[:5])
-
     print ("Unizin Len:", Unizin_len)
     print ("SIS Len", SIS_len)
 
