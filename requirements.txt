@@ -1,0 +1,6 @@
+psycopg2_binary==2.7.5
+pandas==0.23.0
+tqdm==4.25.0
+numpy==1.14.3
+python-dotenv==0.9.1
+psycopg2==2.7.5
