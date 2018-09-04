@@ -35,6 +35,8 @@ import dbqueries
 from collections import OrderedDict
 from operator import itemgetter
 
+from tqdm import tqdm
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -68,15 +70,23 @@ def compare_CSV(tablename):
         print ("Exception ",e)
         return
 
-    #print (Unizin_df.dtypes,SIS_df.dtypes)
-    print ("Unizin Len:", len(Unizin_df))
-    print ("SIS Len", len(SIS_df))
+    SIS_len = len(SIS_df)
+    Unizin_len = len(Unizin_df)
+
+#    print (SIS_df)
+#    print (Unizin_df)
+    
+    RESULTS_FILE.write("First 5 rows",SIS_df.index.tolist()[:5])
+    RESULTS_FILE.write("First 5 rows",Unizin_df.index.tolist()[:5])
+
+    print ("Unizin Len:", Unizin_len)
+    print ("SIS Len", SIS_len)
 
     if len(Unizin_df) == 0 or len(SIS_df) == 0:
         RESULTS_FILE.write(f"This table {tablename} has a empty record for at least one dataset, skipping\n")
         return
 
-    lendiff = len(Unizin_df) - len(SIS_df)
+    lendiff = Unizin_len - SIS_len
     if lendiff > 0:
         RESULTS_FILE.write("Unizin has %d more rows than SIS for this record\n" % abs(lendiff))
     elif lendiff < 0:
@@ -85,7 +95,7 @@ def compare_CSV(tablename):
     Unizin_head = list(Unizin_df)
     print (Unizin_head)
 
-    for i, SIS_r in SIS_df.iterrows():
+    for i, SIS_r in tqdm(SIS_df.iterrows(), total=SIS_len):
         #Look at all the unizin headers and compare
         indexval = SIS_r[index]
         if not indexval:
@@ -93,6 +103,7 @@ def compare_CSV(tablename):
         try: 
             Unizin_r = Unizin_df.loc[indexval]
         except:
+            #print (f"Index error on {indexval}")
             continue
 
         for head in Unizin_head:
@@ -115,17 +126,20 @@ def load_Unizin_to_CSV(tablename):
 
 print ("""Choose an option.
     1 = Import Unizin Data from GCloud to CSV (need developer VPN or other connection setup)
-    2 = Load/Compare CSV files
-    3 = Option 3""")
+    2 = Load/Compare all CSV files
+    3 = Load/Compare a single entry""")
 option = input()
 
 if option == "1":
     for key in dbqueries.QUERIES.keys():
-       load_Unizin_to_CSV(key)
+      load_Unizin_to_CSV(key)
 if option == "2":
+    keys = ['course_section_enrollment']
     for key in dbqueries.QUERIES.keys():
-       compare_CSV(key)
+        compare_CSV(key)
 if option == "3":
-    print ("Option 3")
+    keys = ['course_section_enrollment']
+    for key in keys:
+        compare_CSV(key)
 
 sys.exit(0)

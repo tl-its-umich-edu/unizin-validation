@@ -120,21 +120,22 @@ QUERIES = {
   """},
   #PersonId,SectionId,Role,RoleStatus,EntryDate,ExitDate,CreditsTaken,CreditsEarned
   'course_section_enrollment' : {
-    'index' : 'personid',
+    'index' : 'sectionid',
     'sis_file' : '{date}%2FCourse_Section_Enrollment_{date}.csv',
     'query' : """
             SELECT
+              ucdmint.sourcekey as SisIntId,
+              ucdmext.sourcekey as SisExtId,
               OrganizationPersonRole.PersonId as PersonId,
-              OrganizationPersonRole.OrganizationId as SectionId,
+              ucdmint.sourcekey as SectionId,
               Role.Name as Role,
               RefRoleStatus.Description as RoleStatus,
-              OrganizationPersonRole.EntryDate as EntryDate,
-              OrganizationPersonRole.ExitDate as ExitDate,
+              to_char(OrganizationPersonRole.EntryDate,'YYYY-MM-DD') as EntryDate,
+              to_char(OrganizationPersonRole.ExitDate,'YYYY-MM-DD') as ExitDate,
               PsStudentSection.NumberOfCreditsTaken as CreditsTaken,
-              PsStudentSection.NumberOfCreditsEarned as CreditsEarned,
+              PsStudentSection.NumberOfCreditsEarned as CreditsEarned
               -- Completed at??
               -- RefWorkflowState.Description as WorkflowState
-              'TODO' as WorkflowState
               -- Self-enrolled?
             FROM OrganizationPersonRole
               INNER JOIN Role on Role.RoleId=OrganizationPersonRole.RoleId
@@ -142,5 +143,7 @@ QUERIES = {
               INNER JOIN RefRoleStatus on RefRoleStatus.RefRoleStatusId=RoleStatus.RefRoleStatusId
               INNER JOIN PsStudentSection on PsStudentSection.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
               -- INNER JOIN RefWorkflowState on RefWorkflowState.RefWorkflowStateId=OrganizationPersonRole.RefWorkflowStateId
+              LEFT JOIN ucdmentitykeymap ucdmint on ucdmint.ucdmkey = OrganizationPersonRole.OrganizationId and ucdmint.ucdmentityid = 5 and ucdmint.systemprovisioningid = 1000
+              LEFT JOIN ucdmentitykeymap ucdmext on ucdmext.ucdmkey = OrganizationPersonRole.OrganizationId and ucdmext.ucdmentityid = 5 and ucdmext.systemprovisioningid = 1001
   """},
 }
