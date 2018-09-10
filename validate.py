@@ -120,19 +120,20 @@ def load_Unizin_to_CSV(tablename):
 print ("""Choose an option.
     1 = Import Unizin Data from GCloud to CSV (need developer VPN or other connection setup)
     2 = Load/Compare all CSV files
-    3 = Load/Compare a single entry""")
+    3 = Load/Compare eveything except course_section_enrollment""")
 option = input()
 
 if option == "1":
     for key in dbqueries.QUERIES.keys():
       load_Unizin_to_CSV(key)
 if option == "2":
-    keys = ['course_section_enrollment']
     for key in dbqueries.QUERIES.keys():
         compare_CSV(key)
 if option == "3":
     keys = ['course_section_enrollment']
-    for key in keys:
+    for key in dbqueries.QUERIES.keys():
+        if key in keys:
+            continue
         compare_CSV(key)
 
 sys.exit(0)
