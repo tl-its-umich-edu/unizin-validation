@@ -81,9 +81,9 @@ def compare_CSV(tablename):
 
     lendiff = Unizin_len - SIS_len
     if lendiff > 0:
-        RESULTS_FILE.write("Unizin has %d more rows than SIS for this record\n" % abs(lendiff))
+        RESULTS_FILE.write("Unizin has %d more rows than SIS for this table\n" % abs(lendiff))
     elif lendiff < 0:
-        RESULTS_FILE.write("SIS has %d more rows than SIS for this record\n" % abs(lendiff))
+        RESULTS_FILE.write("SIS has %d more rows than Unizin for this table\n" % abs(lendiff))
 
     Unizin_head = list(Unizin_df)
     print (Unizin_head)
@@ -117,10 +117,14 @@ def load_Unizin_to_CSV(tablename):
     UWriter = open(out_filename,"w")
     curs.copy_expert(outputquery, UWriter)
 
+select_tables = ['course_section_enrollment']
+
 print ("""Choose an option.
     1 = Import Unizin Data from GCloud to CSV (need developer VPN or other connection setup)
     2 = Load/Compare all CSV files
-    3 = Load/Compare eveything except course_section_enrollment""")
+    3 = Load/Compare eveything except select table(s))
+    4 = Load/Compare only select table(s)s""")
+print ("'Select table(s)s' are: ", ', '.join(select_tables))
 option = input()
 
 if option == "1":
@@ -130,9 +134,13 @@ if option == "2":
     for key in dbqueries.QUERIES.keys():
         compare_CSV(key)
 if option == "3":
-    keys = ['course_section_enrollment']
     for key in dbqueries.QUERIES.keys():
-        if key in keys:
+        if key in select_tables:
+            continue
+        compare_CSV(key)
+if option == "4":
+    for key in dbqueries.QUERIES.keys():
+        if key not in select_tables:
             continue
         compare_CSV(key)
 

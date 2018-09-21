@@ -48,8 +48,8 @@ QUERIES = {
     'sis_file' : '{date}%2FCourse_Offering_{date}.csv',
     'query' : """
             SELECT
-              'TODO' as SisIntId,
-              'TODO' as SisExtId,
+              ucdmint.sourcekey as SisIntId,
+              ucdmext.sourcekey as SisExtId,
               PsCourse.OrganizationCalendarSessionId as TermId,
               Course.SubjectAbbreviation as CourseSubj,
               PsCourse.CourseNumber as CourseNo,
@@ -65,6 +65,8 @@ QUERIES = {
               LEFT JOIN RefCourseCreditUnit on RefCourseCreditUnit.RefCourseCreditUnitId=Course.RefCourseCreditUnitId
               LEFT JOIN RefWorkflowState on RefWorkflowState.RefWorkflowStateId=Course.RefWorkflowStateId
               LEFT JOIN RefSessionType on RefSessionType.RefSessionTypeId=OrganizationCalendarSession.RefSessionTypeId
+              LEFT JOIN ucdmentitykeymap ucdmint on ucdmint.ucdmkey = Course.OrganizationId and ucdmint.ucdmentityid = 4 and ucdmint.systemprovisioningid = 1000
+              LEFT JOIN ucdmentitykeymap ucdmext on ucdmext.ucdmkey = Course.OrganizationId and ucdmext.ucdmentityid = 4 and ucdmext.systemprovisioningid = 1001
   """},
   #SisIntId,SisExtId,CourseId,TermId,SectionNumber,DeliveryMode,MaxEnrollment
   'course_section' : {
@@ -145,5 +147,20 @@ QUERIES = {
               -- INNER JOIN RefWorkflowState on RefWorkflowState.RefWorkflowStateId=OrganizationPersonRole.RefWorkflowStateId
               LEFT JOIN ucdmentitykeymap ucdmint on ucdmint.ucdmkey = OrganizationPersonRole.OrganizationId and ucdmint.ucdmentityid = 5 and ucdmint.systemprovisioningid = 1000
               LEFT JOIN ucdmentitykeymap ucdmext on ucdmext.ucdmkey = OrganizationPersonRole.OrganizationId and ucdmext.ucdmentityid = 5 and ucdmext.systemprovisioningid = 1001
+  """},
+  #PersonId,DirectoryBlock
+  'institutional_affiliation' : {
+    'index' : 'personid',
+    'sis_file' : '{date}%2FInstitutional_Affiliation_{date}.csv',
+    'query' : """
+              SELECT ucdmint.sourcekey AS PersonId, 
+                RefDirectoryInformationBlockStatus.Code AS DirectoryBlock 
+            FROM PsStudentEnrollment        
+              LEFT JOIN RefDirectoryInformationBlockStatus ON RefDirectoryInformationBlockStatus.RefDirectoryInformationBlockStatusId = PsStudentEnrollment.RefDirectoryInformationBlockStatusId
+              LEFT JOIN OrganizationPersonRole ON PsStudentEnrollment.OrganizationPersonRoleId = OrganizationPersonRole.OrganizationPersonRoleId
+              LEFT JOIN ucdmentitykeymap ucdmint ON ucdmint.ucdmkey = OrganizationPersonRole.PersonId AND ucdmint.ucdmentityid = 1 AND ucdmint.systemprovisioningid = 1000
+              LEFT JOIN ucdmentitykeymap ucdmext ON ucdmext.ucdmkey = OrganizationPersonRole.PersonId AND ucdmext.ucdmentityid = 1 AND ucdmext.systemprovisioningid = 1001
+              -- We only want the entiries where it's blocked or remove
+            WHERE PsStudentEnrollment.RefDirectoryInformationBlockStatusId != -1
   """},
 }
