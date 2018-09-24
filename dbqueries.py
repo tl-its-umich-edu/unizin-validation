@@ -1,12 +1,13 @@
 # SisIntId,SisExtId,FirstName,MiddleName,LastName,Suffix,Sex,Ethnicity,ZipCode,USResidency,HsGpa,ColGpaCum,ActiveDuty,Veteran,EduLevelPaternal,EduLevelMaternal,EduLevelParental,EnrollmentLevel,CourseCount,PhoneNumber,PhoneType,EmailAddress,EmailType
-# CSV Has Prefix Data has Suffix
-# Currently missing EduLevelPaternal EduLevelMaternal, EduLevelParental, EnrollmentLevel
+
+
+# Pulled out SatMathPre2016,SatMathPost2016,SatMathCombined,SatVerbalPre2016,SatReadingPost2016,SatVerbalReadingCombined,SatWritingPre2016,SatWritingPost2016,SatWritingCombined,SatTotalCombined,ActReading,ActMath,ActEnglish,ActScience,ActComposite. 
+
+# Not sure to keep these in here or for another query
+
+# Note: CourseCount requires a count(*) across another table and seems inefficient to include in this query. Is not validated for all records.
+
 # Query for person rescord
-
-# Course Count requires a count, so would need to be validated separately, is not validated
-
-# Pulled out SatMathPre2016,SatMathPost2016,SatMathCombined,SatVerbalPre2016,SatReadingPost2016,SatVerbalReadingCombined,SatWritingPre2016,SatWritingPost2016,SatWritingCombined,SatTotalCombined,ActReading,ActMath,ActEnglish,ActScience,ActComposite for another query?
-
 QUERIES = { 
   'person' : {
     'index' : 'sisintid',
@@ -40,6 +41,38 @@ QUERIES = {
               ) as ColGpaCum,              
               RefMilitaryActiveStudentIndicator.Code as ActiveDuty,
               RefMilitaryVeteranStudentIndicator.Code as Veteran,
+              (SELECT RefEducationLevel.Code
+                FROM PsStudentDemographic
+                LEFT JOIN OrganizationPersonRole ON PsStudentDemoGraphic.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefEducationLevel ON PsStudentDemographic.RefPaternalEducationLevelId = RefEducationLevel.RefEducationLevelId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7  
+              ) as EduLevelPaternal,      
+              (SELECT RefEducationLevel.Code
+                FROM PsStudentDemographic
+                LEFT JOIN OrganizationPersonRole ON PsStudentDemoGraphic.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefEducationLevel ON PsStudentDemographic.RefMaternalEducationLevelId = RefEducationLevel.RefEducationLevelId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7  
+              ) as EduLevelMaternal,
+              (SELECT RefEducationLevel.Code
+                FROM PsStudentDemographic
+                LEFT JOIN OrganizationPersonRole ON PsStudentDemoGraphic.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefEducationLevel ON PsStudentDemographic.RefParentalEducationLevelId = RefEducationLevel.RefEducationLevelId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7  
+              ) as EduLevelParental,
+              (SELECT RefPsStudentLevel.Code
+                FROM PsStudentEnrollment
+                LEFT JOIN OrganizationPersonRole ON PsStudentEnrollment.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefPsStudentLevel ON PsStudentEnrollment.RefPsStudentLevelId = RefPsStudentLevel.RefPsStudentLevelId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7  
+              ) as EnrollmentLevel,
               PersonTelephone.TelephoneNumber as PhoneNumber,
               RefPersonTelephoneNumberType.Code as PhoneType,
               PersonEmailAddress.EmailAddress as EmailAddress,
