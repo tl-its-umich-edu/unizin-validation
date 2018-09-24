@@ -1,7 +1,11 @@
-# SisIntId,SisExtId,FirstName,MiddleName,LastName,Suffix,Sex,Ethnicity,ZipCode,USResidency,HsGpa,ColGpaCum,ActiveDuty,Veteran,EduLevelPaternal,EduLevelMaternal,EduLevelParental,EnrollmentLevel,CourseCount,SatMathPre2016,SatMathPost2016,SatMathCombined,SatVerbalPre2016,SatReadingPost2016,SatVerbalReadingCombined,SatWritingPre2016,SatWritingPost2016,SatWritingCombined,SatTotalCombined,ActReading,ActMath,ActEnglish,ActScience,ActComposite,PhoneNumber,PhoneType,EmailAddress,EmailType
+# SisIntId,SisExtId,FirstName,MiddleName,LastName,Suffix,Sex,Ethnicity,ZipCode,USResidency,HsGpa,ColGpaCum,ActiveDuty,Veteran,EduLevelPaternal,EduLevelMaternal,EduLevelParental,EnrollmentLevel,CourseCount,PhoneNumber,PhoneType,EmailAddress,EmailType
 # CSV Has Prefix Data has Suffix
-# Currently missing HsGpa ColGpaCum EduLevelPaternal EduLevel Maternal EnrollmentLevelCourseCount Sat*
+# Currently missing EduLevelPaternal EduLevelMaternal, EduLevelParental, EnrollmentLevel
 # Query for person rescord
+
+# Course Count requires a count, so would need to be validated separately, is not validated
+
+# Pulled out SatMathPre2016,SatMathPost2016,SatMathCombined,SatVerbalPre2016,SatReadingPost2016,SatVerbalReadingCombined,SatWritingPre2016,SatWritingPost2016,SatWritingCombined,SatTotalCombined,ActReading,ActMath,ActEnglish,ActScience,ActComposite for another query?
 
 QUERIES = { 
   'person' : {
@@ -20,6 +24,20 @@ QUERIES = {
               RefRace.Code as Ethnicity,
               PersonAddress.PostalCode as ZipCode,
               RefUSCitizenshipStatus.Code as UsResidency,
+              (SELECT PsStudentApplication.GradePointAverageCumulative
+                FROM PsStudentApplication
+                LEFT JOIN OrganizationPersonRole on PsStudentApplication.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7  
+              ) as HsGpa,
+              (SELECT PsStudentAcademicRecord.GradePointAverageCumulative
+                FROM PsStudentAcademicRecord
+                LEFT JOIN OrganizationPersonRole on PsStudentAcademicRecord.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7  
+              ) as ColGpaCum,              
               RefMilitaryActiveStudentIndicator.Code as ActiveDuty,
               RefMilitaryVeteranStudentIndicator.Code as Veteran,
               PersonTelephone.TelephoneNumber as PhoneNumber,
