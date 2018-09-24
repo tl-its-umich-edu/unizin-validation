@@ -93,6 +93,7 @@ def compare_CSV(tablename):
     Unizin_head = list(Unizin_df)
     print (Unizin_head)
 
+    RESULTS_FILE.flush()
     for i, SIS_r in tqdm(SIS_df.iterrows(), total=SIS_len):
         #Look at all the unizin headers and compare
         indexval = SIS_r[index]
@@ -107,6 +108,7 @@ def compare_CSV(tablename):
         for head in Unizin_head:
             try:
                 if not close_compare(SIS_r[head], Unizin_r[head]):
+                    RESULTS_FILE.write(type(SIS_r[head]),type(Unizin_r[head]))
                     RESULTS_FILE.write(f"{head} does not match for {indexval} SIS: {SIS_r[head]} Unizin: {Unizin_r[head]}\n")
             except:
                 continue
@@ -121,31 +123,30 @@ def load_Unizin_to_CSV(tablename):
     UWriter = open(out_filename,"w")
     curs.copy_expert(outputquery, UWriter)
 
-select_tables = ['course_section_enrollment']
+#select_tables = ['course_section_enrollment']
+select_tables = ['person']
 
 print ("""Choose an option.
-    1 = Import Unizin Data from GCloud to CSV (need developer VPN or other connection setup)
-    2 = Load/Compare all CSV files
-    3 = Load/Compare eveything except select table(s))
-    4 = Load/Compare only select table(s)s""")
+    1 = Import *All* Unizin Data from GCloud to CSV (need developer VPN or other connection setup)
+    2 = Import *select* table(s) from GCloud to CSV (need developer VPN or other connection setup)
+    3 = Load/Compare *All* CSV files
+    4 = Load/Compare *select* table(s)""")
 print ("'Select table(s)' are: ", ', '.join(select_tables))
 option = input()
 
 if option == "1":
     for key in dbqueries.QUERIES.keys():
-      load_Unizin_to_CSV(key)
+        load_Unizin_to_CSV(key)
 if option == "2":
     for key in dbqueries.QUERIES.keys():
-        compare_CSV(key)
+        if key in select_tables:
+            load_Unizin_to_CSV(key)
 if option == "3":
     for key in dbqueries.QUERIES.keys():
-        if key in select_tables:
-            continue
         compare_CSV(key)
 if option == "4":
     for key in dbqueries.QUERIES.keys():
-        if key not in select_tables:
-            continue
-        compare_CSV(key)
+        if key in select_tables:
+            compare_CSV(key)
 
 sys.exit(0)
