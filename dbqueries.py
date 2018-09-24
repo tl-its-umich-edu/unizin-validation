@@ -1,18 +1,10 @@
-# SisIntId,SisExtId,FirstName,MiddleName,LastName,Suffix,Sex,Ethnicity,ZipCode,USResidency,HsGpa,ColGpaCum,ActiveDuty,Veteran,EduLevelPaternal,EduLevelMaternal,EduLevelParental,EnrollmentLevel,CourseCount,PhoneNumber,PhoneType,EmailAddress,EmailType
-
-
-# Pulled out SatMathPre2016,SatMathPost2016,SatMathCombined,SatVerbalPre2016,SatReadingPost2016,SatVerbalReadingCombined,SatWritingPre2016,SatWritingPost2016,SatWritingCombined,SatTotalCombined,ActReading,ActMath,ActEnglish,ActScience,ActComposite. 
-
-# Not sure to keep these in here or for another query
-
-# Note: CourseCount requires a count(*) across another table and seems inefficient to include in this query. Is not validated for all records.
-
-# Query for person rescord
 QUERIES = { 
+    #SisIntId,SisExtId,FirstName,MiddleName,LastName,Suffix,Sex,Ethnicity,ZipCode,USResidency,HsGpa,ColGpaCum,ActiveDuty,Veteran,EduLevelPaternal,EduLevelMaternal,EduLevelParental,EnrollmentLevel,CourseCount,SatMathPre2016,SatMathPost2016,SatMathCombined,SatVerbalPre2016,SatReadingPost2016,SatVerbalReadingCombined,SatWritingPre2016,SatWritingPost2016,SatWritingCombined,SatTotalCombined,ActReading,ActMath,ActEnglish,ActScience,ActComposite,PhoneNumber,PhoneType,EmailAddress,EmailType
   'person' : {
     'index' : 'sisintid',
     'sis_file' : '{date}%2FPerson_{date}.csv',
     'query' : """
+            WITH CourseCountValues AS (SELECT PersonId, COUNT(*) AS CourseCount FROM OrganizationPersonRole GROUP BY PersonId)
             SELECT
               ucdmint.sourcekey as SisIntId,
               ucdmext.sourcekey as SisExtId,
@@ -21,7 +13,7 @@ QUERIES = {
               Person.Lastname as LastName,
               Person.Prefix as Prefix,
               Person.GenerationCode as Suffix,
-              RefSex.description as Sex,
+              RefSex.Code as Sex,
               RefRace.Code as Ethnicity,
               PersonAddress.PostalCode as ZipCode,
               RefUSCitizenshipStatus.Code as UsResidency,
@@ -73,6 +65,142 @@ QUERIES = {
                   Person.PersonId = OrganizationPersonRole.PersonId AND
                   OrganizationPersonRole.OrganizationId=7  
               ) as EnrollmentLevel,
+              (SELECT CourseCount from CourseCountValues where Person.PersonId = CourseCountValues.PersonId) as CourseCount,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='SatMathPre2016'
+              ) as SatMathPre2016,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='SatMathPost2016'
+              ) as SatMathPost2016,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='SatMathCombined'
+              ) as SatMathCombined,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='SatVerbalPre2016'
+              ) as SatVerbalPre2016,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='SatReadingPost2016'
+              ) as SatReadingPost2016,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='SatVerbalReadingCombined'
+              ) as SatVerbalReadingCombined,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='SatWritingPre2016'
+              ) as SatWritingPre2016,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='SatWritingPost2016'
+              ) as SatWritingPost2016,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='SatWritingCombined'
+              ) as SatWritingCombined,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='SatTotalCombined'
+              ) as SatTotalCombined,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='ActReading'
+              ) as ActReading,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='ActMath'
+              ) as ActMath,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='ActEnglish'
+              ) as ActEnglish,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='ActScience'
+              ) as ActScience,
+              (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
+                FROM PsStudentAdmissionTest
+                LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
+                LEFT JOIN RefStandardizedAdmissionTest on RefStandardizedAdmissionTest.RefStandardizedAdmissionTestId=PsStudentAdmissionTest.RefStandardizedAdmissionTestId
+                WHERE
+                  Person.PersonId = OrganizationPersonRole.PersonId AND
+                  OrganizationPersonRole.OrganizationId=7 AND
+                  RefStandardizedAdmissionTest.code='ActComposite'
+              ) as ActComposite,
               PersonTelephone.TelephoneNumber as PhoneNumber,
               RefPersonTelephoneNumberType.Code as PhoneType,
               PersonEmailAddress.EmailAddress as EmailAddress,
