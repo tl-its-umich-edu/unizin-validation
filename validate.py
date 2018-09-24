@@ -119,7 +119,10 @@ def load_Unizin_to_CSV(tablename):
     conn = psycopg2.connect(os.getenv("DSN"))
     curs = conn.cursor()
 
-    outputquery = "COPY ({0}) TO STDOUT WITH CSV HEADER FORCE QUOTE *".format(dbqueries.QUERIES[tablename]['query'])
+    query = dbqueries.QUERIES[tablename]
+    if (query['prequery']):
+        curs.execute(query['prequery'])
+    outputquery = "COPY ({0}) TO STDOUT WITH CSV HEADER FORCE QUOTE *".format(query['query'])
     UWriter = open(out_filename,"w")
     curs.copy_expert(outputquery, UWriter)
 

@@ -1,10 +1,15 @@
 QUERIES = { 
-    #SisIntId,SisExtId,FirstName,MiddleName,LastName,Suffix,Sex,Ethnicity,ZipCode,USResidency,HsGpa,ColGpaCum,ActiveDuty,Veteran,EduLevelPaternal,EduLevelMaternal,EduLevelParental,EnrollmentLevel,CourseCount,SatMathPre2016,SatMathPost2016,SatMathCombined,SatVerbalPre2016,SatReadingPost2016,SatVerbalReadingCombined,SatWritingPre2016,SatWritingPost2016,SatWritingCombined,SatTotalCombined,ActReading,ActMath,ActEnglish,ActScience,ActComposite,PhoneNumber,PhoneType,EmailAddress,EmailType
+#SisIntId,SisExtId,FirstName,MiddleName,LastName,Suffix,Sex,Ethnicity,ZipCode,USResidency,HsGpa,ColGpaCum,ActiveDuty,Veteran,EduLevelPaternal,EduLevelMaternal,EduLevelParental,EnrollmentLevel,CourseCount,SatMathPre2016,SatMathPost2016,SatMathCombined,SatVerbalPre2016,SatReadingPost2016,SatVerbalReadingCombined,SatWritingPre2016,SatWritingPost2016,SatWritingCombined,SatTotalCombined,ActReading,ActMath,ActEnglish,ActScience,ActComposite,PhoneNumber,PhoneType,EmailAddress,EmailType
   'person' : {
     'index' : 'sisintid',
     'sis_file' : '{date}%2FPerson_{date}.csv',
+    # Setup a temporary table for this, this is much faster than using a WITH because of the index
+    'prequery' : """
+        CREATE TEMPORARY TABLE CourseCountValues AS (SELECT PersonId, COUNT(*) AS CourseCount FROM OrganizationPersonRole GROUP BY PersonId);
+        CREATE INDEX course_count_person_id_index ON CourseCountValues(PersonId);
+        
+    """,
     'query' : """
-            WITH CourseCountValues AS (SELECT PersonId, COUNT(*) AS CourseCount FROM OrganizationPersonRole GROUP BY PersonId)
             SELECT
               ucdmint.sourcekey as SisIntId,
               ucdmext.sourcekey as SisExtId,
