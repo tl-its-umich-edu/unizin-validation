@@ -16,6 +16,8 @@
 
 UNIZIN_FILE = "unizin_{table}.csv"
 
+RESULTS_FILE = open("results.txt", "w")
+
 ## don't modify anything below this line (except for experimenting)
 
 import sys
@@ -53,7 +55,10 @@ def load_CSV_to_dict(infile, indexname):
     df = df.fillna('NoData')
     return df.set_index(indexname, drop=False)
 
-RESULTS_FILE = open("results.txt", "w")
+def close_compare(a, b):
+    if (isinstance(a, float) and isinstance(b,float)):
+        return np.isclose(a,b)
+    return a == b
 
 def compare_CSV(tablename):
     RESULTS_FILE.write(f"Comparing on {tablename}\n")
@@ -101,11 +106,10 @@ def compare_CSV(tablename):
 
         for head in Unizin_head:
             try:
-                if SIS_r[head] != Unizin_r[head]:
+                if not close_compare(SIS_r[head], Unizin_r[head]):
                     RESULTS_FILE.write(f"{head} does not match for {indexval} SIS: {SIS_r[head]} Unizin: {Unizin_r[head]}\n")
             except:
                 continue
-
 
 def load_Unizin_to_CSV(tablename):
     out_filename = UNIZIN_FILE.format(table=tablename)
@@ -124,7 +128,7 @@ print ("""Choose an option.
     2 = Load/Compare all CSV files
     3 = Load/Compare eveything except select table(s))
     4 = Load/Compare only select table(s)s""")
-print ("'Select table(s)s' are: ", ', '.join(select_tables))
+print ("'Select table(s)' are: ", ', '.join(select_tables))
 option = input()
 
 if option == "1":
