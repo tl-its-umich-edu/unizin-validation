@@ -2,7 +2,7 @@ QUERIES = {
 #SisIntId,SisExtId,FirstName,MiddleName,LastName,Suffix,Sex,Ethnicity,ZipCode,USResidency,HsGpa,ColGpaCum,ActiveDuty,Veteran,EduLevelPaternal,EduLevelMaternal,EduLevelParental,EnrollmentLevel,CourseCount,SatMathPre2016,SatMathPost2016,SatMathCombined,SatVerbalPre2016,SatReadingPost2016,SatVerbalReadingCombined,SatWritingPre2016,SatWritingPost2016,SatWritingCombined,SatTotalCombined,ActReading,ActMath,ActEnglish,ActScience,ActComposite,PhoneNumber,PhoneType,EmailAddress,EmailType
   'person' : {
     'index' : 'sisintid',
-    'sis_file' : '{date}%2FPerson_{date}.csv',
+    'sis_file' : '{date}%2Fperson_{date}.csv',
     # Setup a temporary table for this, this is much faster than using a WITH because of the index
     'prequery' : """
         CREATE TEMPORARY TABLE CourseCountValues AS (SELECT PersonId, COUNT(*) AS CourseCount FROM OrganizationPersonRole GROUP BY PersonId);
@@ -229,7 +229,7 @@ QUERIES = {
   #SisIntId,SisExtId,TermId,CourseSubj,CourseNo,Title,Description,Status,AvailableCredits
   'course_offering' : {
     'index' : 'sisintid',
-    'sis_file' : '{date}%2FCourse_Offering_{date}.csv',
+    'sis_file' : '{date}%2Fcourse_offering_{date}.csv',
     'query' : """
             SELECT
               ucdmint.sourcekey as SisIntId,
@@ -255,7 +255,7 @@ QUERIES = {
   #SisIntId,SisExtId,CourseId,TermId,SectionNumber,DeliveryMode,MaxEnrollment
   'course_section' : {
     'index' : 'sisintid',
-    'sis_file' : '{date}%2FCourse_Section_{date}.csv',
+    'sis_file' : '{date}%2Fcourse_section_{date}.csv',
     'query' : """
             SELECT
               ucdmint.sourcekey as SisIntId,
@@ -283,7 +283,7 @@ QUERIES = {
   #SisIntId,SisExtId,TermType,SessionType,SessionName,TermBeginDate,TermEndDate,InstrBeginDate,InstrEndDate
   'calendar' : {
     'index' : 'sisintid',
-    'sis_file' : '{date}%2FAcademic_Term_{date}.csv',
+    'sis_file' : '{date}%2Facademic_term_{date}.csv',
     'query' : """
             SELECT
               ucdmint.sourcekey as SisIntId,
@@ -307,7 +307,7 @@ QUERIES = {
   #PersonId,SectionId,Role,RoleStatus,EntryDate,ExitDate,CreditsTaken,CreditsEarned
   'course_section_enrollment' : {
     'index' : 'sectionid',
-    'sis_file' : '{date}%2FCourse_Section_Enrollment_{date}.csv',
+    'sis_file' : '{date}%2Fcourse_section_enrollment_{date}.csv',
     'query' : """
             SELECT
               ucdmint.sourcekey as SisIntId,
@@ -335,7 +335,7 @@ QUERIES = {
   #PersonId,DirectoryBlock
   'institutional_affiliation' : {
     'index' : 'personid',
-    'sis_file' : '{date}%2FInstitutional_Affiliation_{date}.csv',
+    'sis_file' : '{date}%2Finstitutional_affiliation_{date}.csv',
     'query' : """
               SELECT ucdmint.sourcekey AS PersonId, 
                 RefDirectoryInformationBlockStatus.Code AS DirectoryBlock 

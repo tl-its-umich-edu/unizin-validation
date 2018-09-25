@@ -120,9 +120,9 @@ def load_Unizin_to_CSV(tablename):
     curs = conn.cursor()
 
     query = dbqueries.QUERIES[tablename]
-    if (query['prequery']):
-        curs.execute(query['prequery'])
-    outputquery = "COPY ({0}) TO STDOUT WITH CSV HEADER FORCE QUOTE *".format(query['query'])
+    if (query.get('prequery')):
+        curs.execute(query.get('prequery'))
+    outputquery = "COPY ({0}) TO STDOUT WITH CSV HEADER FORCE QUOTE *".format(query.get('query'))
     UWriter = open(out_filename,"w")
     curs.copy_expert(outputquery, UWriter)
 
