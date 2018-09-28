@@ -16,7 +16,8 @@
 
 UNIZIN_FILE = "unizin_{table}.csv"
 
-RESULTS_FILE = open("results.txt", "w")
+RESULTS_FILE = open("u_results.txt", "w")
+ERRORS_FILE = open("u_errors.txt", "w")
 
 ## don't modify anything below this line (except for experimenting)
 
@@ -50,15 +51,23 @@ def load_CSV_to_dict(infile, indexname):
     df = pd.read_csv(infile, delimiter=',', dtype=str)
     # Lower case headers
     df.columns = map(str.lower, df.columns)
-    df[indexname] = pd.to_numeric(df[indexname], errors='coerce')
+    df[indexname] = pd.to_numeric(df[indexname], errors='coerce', downcast='integer')
 
     df = df.fillna('NoData')
     return df.set_index(indexname, drop=False)
 
-def close_compare(a, b):
-    if (isinstance(a, float) and isinstance(b,float)):
-        return np.isclose(a,b)
-    return a == b
+#def close_compare(a, b):
+#    if (isinstance(a, float) and isinstance(b,float)):
+#        return np.isclose(a,b)
+#    return a == b
+
+def close_compare(i, j):
+    try:
+        i = float(i)
+        j = float(j)
+        return np.isclose(i,j)
+    except ValueError:
+        return i==j
 
 def compare_CSV(tablename):
     RESULTS_FILE.write(f"Comparing on {tablename}\n")
@@ -77,8 +86,7 @@ def compare_CSV(tablename):
 #    print (SIS_df)
 #    print (Unizin_df)
     
-    print ("Unizin Len:", Unizin_len)
-    print ("SIS Len", SIS_len)
+    RESULTS_FILE.write ("Unizin rows: %d, SIS rows: %d\n" % (Unizin_len, SIS_len))
 
     if len(Unizin_df) == 0 or len(SIS_df) == 0:
         RESULTS_FILE.write(f"This table {tablename} has a empty record for at least one dataset, skipping\n")
@@ -105,12 +113,16 @@ def compare_CSV(tablename):
             #print (f"Index error on {indexval}")
             continue
 
+#        f = np.frompyfunc(close_compare, 2, 1)
+
         for head in Unizin_head:
             try:
+#               f(SIS_r[head], Unizin_r[head])
                 if not close_compare(SIS_r[head], Unizin_r[head]):
-                    RESULTS_FILE.write(type(SIS_r[head]),type(Unizin_r[head]))
+#                    RESULTS_FILE.write("type SIS %s, type Unizin %s\n" % (type(SIS_r[head]),type(Unizin_r[head])))
                     RESULTS_FILE.write(f"{head} does not match for {indexval} SIS: {SIS_r[head]} Unizin: {Unizin_r[head]}\n")
-            except:
+            except Exception as e:
+                ERRORS_FILE.write("%s\n" % str(e)) 
                 continue
 
 def load_Unizin_to_CSV(tablename):
@@ -126,8 +138,8 @@ def load_Unizin_to_CSV(tablename):
     UWriter = open(out_filename,"w")
     curs.copy_expert(outputquery, UWriter)
 
-#select_tables = ['course_section_enrollment']
-select_tables = ['person']
+select_tables = ['academic_term']
+#select_tables = ['person']
 
 print ("""Choose an option.
     1 = Import *All* Unizin Data from GCloud to CSV (need developer VPN or other connection setup)

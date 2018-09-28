@@ -1,5 +1,6 @@
 QUERIES = { 
 #SisIntId,SisExtId,FirstName,MiddleName,LastName,Suffix,Sex,Ethnicity,ZipCode,USResidency,HsGpa,ColGpaCum,ActiveDuty,Veteran,EduLevelPaternal,EduLevelMaternal,EduLevelParental,EnrollmentLevel,CourseCount,SatMathPre2016,SatMathPost2016,SatMathCombined,SatVerbalPre2016,SatReadingPost2016,SatVerbalReadingCombined,SatWritingPre2016,SatWritingPost2016,SatWritingCombined,SatTotalCombined,ActReading,ActMath,ActEnglish,ActScience,ActComposite,PhoneNumber,PhoneType,EmailAddress,EmailType
+# CourseCount and Prefix are not present in SIS, currently removed
   'person' : {
     'index' : 'sisintid',
     'sis_file' : '{date}%2Fperson_{date}.csv',
@@ -16,7 +17,7 @@ QUERIES = {
               Person.Firstname as FirstName,
               Person.Middlename as MiddleName,
               Person.Lastname as LastName,
-              Person.Prefix as Prefix,
+              --Person.Prefix as Prefix,
               Person.GenerationCode as Suffix,
               RefSex.Code as Sex,
               RefRace.Code as Ethnicity,
@@ -70,7 +71,7 @@ QUERIES = {
                   Person.PersonId = OrganizationPersonRole.PersonId AND
                   OrganizationPersonRole.OrganizationId=7  
               ) as EnrollmentLevel,
-              (SELECT CourseCount from CourseCountValues where Person.PersonId = CourseCountValues.PersonId) as CourseCount,
+--              (SELECT CourseCount from CourseCountValues where Person.PersonId = CourseCountValues.PersonId) as CourseCount,
               (SELECT PsStudentAdmissionTest.StandardizedAdmissionTestScore
                 FROM PsStudentAdmissionTest
                 LEFT JOIN OrganizationPersonRole on PsStudentAdmissionTest.OrganizationPersonRoleId=OrganizationPersonRole.OrganizationPersonRoleId
@@ -281,7 +282,7 @@ QUERIES = {
 
   """},
   #SisIntId,SisExtId,TermType,SessionType,SessionName,TermBeginDate,TermEndDate,InstrBeginDate,InstrEndDate
-  'calendar' : {
+  'academic_term' : {
     'index' : 'sisintid',
     'sis_file' : '{date}%2Facademic_term_{date}.csv',
     'query' : """
