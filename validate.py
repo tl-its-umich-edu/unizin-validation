@@ -25,6 +25,8 @@ import sys
 import psycopg2
 import os
 import itertools
+import csv
+import argparse
 
 import numpy as np
 import pandas as pd
@@ -138,30 +140,42 @@ def load_Unizin_to_CSV(tablename):
     UWriter = open(out_filename,"w")
     curs.copy_expert(outputquery, UWriter)
 
-select_tables = ['academic_term']
-#select_tables = ['person']
+#select_tables = ['academic_term']
+select_tables = list(csv.reader([os.getenv("SELECT_TABLES", "academic_term")]))[0]
 
-print ("""Choose an option.
+print (select_tables)
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-o", "--option", type=int, help="Run an option by number",)
+args = parser.parse_args()
+
+option = args.option
+
+if (not option):
+    print ("""Choose an option.
     1 = Import *All* Unizin Data from GCloud to CSV (need developer VPN or other connection setup)
     2 = Import *select* table(s) from GCloud to CSV (need developer VPN or other connection setup)
     3 = Load/Compare *All* CSV files
     4 = Load/Compare *select* table(s)""")
-print ("'Select table(s)' are: ", ', '.join(select_tables))
-option = input()
+    print ("'Select table(s)' are: ", ', '.join(select_tables))
+    option = input()
 
+print (f"Running option {option}")
 if option == "1":
     for key in dbqueries.QUERIES.keys():
         load_Unizin_to_CSV(key)
-if option == "2":
+elif option == "2":
     for key in dbqueries.QUERIES.keys():
         if key in select_tables:
             load_Unizin_to_CSV(key)
-if option == "3":
+elif option == "3":
     for key in dbqueries.QUERIES.keys():
         compare_CSV(key)
-if option == "4":
+elif option == "4":
     for key in dbqueries.QUERIES.keys():
         if key in select_tables:
             compare_CSV(key)
+else: 
+    print(f"{option} is not currently a valid option")
 
 sys.exit(0)
