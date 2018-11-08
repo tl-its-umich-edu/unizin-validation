@@ -4,6 +4,7 @@ QUERIES = {
   'person' : {
     'index' : 'sisintid',
     'sis_file' : '{date}%2Fperson_{date}.csv',
+    'dsn' : 'ucdm',
     # Setup a temporary table for this, this is much faster than using a WITH because of the index
     'prequery' : """
         CREATE TEMPORARY TABLE CourseCountValues AS (SELECT PersonId, COUNT(*) AS CourseCount FROM OrganizationPersonRole GROUP BY PersonId);
@@ -231,6 +232,7 @@ QUERIES = {
   'course_offering' : {
     'index' : 'sisintid',
     'sis_file' : '{date}%2Fcourse_offering_{date}.csv',
+    'dsn' : 'ucdm',
     'query' : """
             SELECT
               ucdmint.sourcekey as SisIntId,
@@ -257,6 +259,7 @@ QUERIES = {
   'course_section' : {
     'index' : 'sisintid',
     'sis_file' : '{date}%2Fcourse_section_{date}.csv',
+    'dsn' : 'ucdm',
     'query' : """
             SELECT
               ucdmint.sourcekey as SisIntId,
@@ -285,6 +288,7 @@ QUERIES = {
   'academic_term' : {
     'index' : 'sisintid',
     'sis_file' : '{date}%2Facademic_term_{date}.csv',
+    'dsn' : 'ucdm',
     'query' : """
             SELECT
               ucdmint.sourcekey as SisIntId,
@@ -309,6 +313,7 @@ QUERIES = {
   'course_section_enrollment' : {
     'index' : 'sectionid',
     'sis_file' : '{date}%2Fcourse_section_enrollment_{date}.csv',
+    'dsn' : 'ucdm',
     'query' : """
             SELECT
               ucdmint.sourcekey as SisIntId,
@@ -337,6 +342,7 @@ QUERIES = {
   'institutional_affiliation' : {
     'index' : 'personid',
     'sis_file' : '{date}%2Finstitutional_affiliation_{date}.csv',
+    'dsn' : 'ucdm',
     'query' : """
               SELECT ucdmint.sourcekey AS PersonId, 
                 RefDirectoryInformationBlockStatus.Code AS DirectoryBlock 
@@ -348,4 +354,12 @@ QUERIES = {
               -- We only want the entiries where it's blocked or remove
             WHERE PsStudentEnrollment.RefDirectoryInformationBlockStatusId != -1
   """},
+  'number_of_courses_by_term' : {
+    'index' : 'term',
+    'sis_file' : 'number_of_courses_by_term.csv',
+    'dsn' : 'udw',
+    'query' : """
+              SELECT DISTINCT(ed.name) AS Term, COUNT(ed.name) as TermCount FROM course_dim cd JOIN enrollment_term_dim ed on enrollment_term_id = ed.id GROUP BY ed.name ORDER BY ed.name DESC;
+  """},
+
 }

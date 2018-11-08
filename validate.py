@@ -130,7 +130,9 @@ def compare_CSV(tablename):
 def load_Unizin_to_CSV(tablename):
     out_filename = UNIZIN_FILE.format(table=tablename)
     print (f"Loading ucdm {tablename} table to {out_filename}")
-    conn = psycopg2.connect(os.getenv("DSN"))
+    # The DSN might switch depending on the data file
+    conn = psycopg2.connect(os.getenv("DSN-"+dbqueries.QUERIES[tablename]['dsn']))
+    
     curs = conn.cursor()
 
     query = dbqueries.QUERIES[tablename]
@@ -156,25 +158,30 @@ if (not option):
     1 = Import *All* Unizin Data from GCloud to CSV (need developer VPN or other connection setup)
     2 = Import *select* table(s) from GCloud to CSV (need developer VPN or other connection setup)
     3 = Load/Compare *All* CSV files
-    4 = Load/Compare *select* table(s)""")
+    4 = Load/Compare *select* table(s)
+    5 = Compare for Canvas data loaded into Unizin 
+    """)
     print ("'Select table(s)' are: ", ', '.join(select_tables))
-    option = input()
+    option = int(input())
 
 print (f"Running option {option}")
-if option == "1":
+if option == 1:
     for key in dbqueries.QUERIES.keys():
         load_Unizin_to_CSV(key)
-elif option == "2":
+elif option == 2:
     for key in dbqueries.QUERIES.keys():
         if key in select_tables:
             load_Unizin_to_CSV(key)
-elif option == "3":
+elif option == 3:
     for key in dbqueries.QUERIES.keys():
         compare_CSV(key)
-elif option == "4":
+elif option == 4:
     for key in dbqueries.QUERIES.keys():
         if key in select_tables:
             compare_CSV(key)
+elif option == 5:
+    # Only run this query
+    load_Unizin_to_CSV("number_of_courses_by_term")
 else: 
     print(f"{option} is not currently a valid option")
 
