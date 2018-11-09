@@ -9,12 +9,9 @@ ERRORS_FILE = open("u_errors.txt", "w")
 
 ## don't modify anything below this line (except for experimenting)
 
-import sys
+import sys, os, csv, itertools, argparse
+
 import psycopg2
-import os
-import itertools
-import csv
-import argparse
 
 import numpy as np
 import pandas as pd
@@ -126,9 +123,18 @@ def load_Unizin_to_CSV(tablename):
     query = dbqueries.QUERIES[tablename]
     if (query.get('prequery')):
         curs.execute(query.get('prequery'))
-    outputquery = "COPY ({0}) TO STDOUT WITH CSV HEADER FORCE QUOTE *".format(query.get('query'))
     UWriter = open(out_filename,"w")
-    curs.copy_expert(outputquery, UWriter)
+    # Try this first with this, breaks in 8.0 though :()
+    try:
+        outputquery = "COPY ({0}) TO STDOUT WITH CSV HEADER FORCE QUOTE *".format(query.get('query'))
+        curs.copy_expert(outputquery, UWriter)
+    except psycopg2.ProgrammingError:
+        print ("Copy query failed, trying regular query, possibly 8.0")
+        writer = csv.writer(UWriter)
+
+        conn.reset()
+        curs.execute(query.get('query'))
+        writer.writerows(curs.fetchall())
 
 #select_tables = ['academic_term']
 select_tables = list(csv.reader([os.getenv("SELECT_TABLES", "academic_term")]))[0]
@@ -147,7 +153,7 @@ if (not option):
     2 = Import *select* table(s) from GCloud to CSV (need developer VPN or other connection setup)
     3 = Load/Compare *All* CSV files
     4 = Load/Compare *select* table(s)
-    5 = Compare for Canvas data loaded into Unizin 
+    5 = Import/Compare for Canvas data loaded into Unizin 
     """)
     print ("'Select table(s)' are: ", ', '.join(select_tables))
     option = int(input())
