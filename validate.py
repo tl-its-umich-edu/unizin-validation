@@ -116,7 +116,7 @@ def load_Unizin_to_CSV(tablename):
     out_filename = UNIZIN_FILE.format(table=tablename)
     print (f"Loading ucdm {tablename} table to {out_filename}")
     # The DSN might switch depending on the data file
-    conn = psycopg2.connect(os.getenv("DSN-"+dbqueries.QUERIES[tablename]['dsn']))
+    conn = psycopg2.connect(os.getenv("DSN_"+dbqueries.QUERIES[tablename]['dsn']))
     
     curs = conn.cursor()
 
