@@ -358,6 +358,7 @@ QUERIES = {
     'index' : 'term',
     'sis_file' : 'number_of_courses_by_term.csv',
     'dsn' : 'udw',
+    'query_name': 'Count of courses by term in UDW',
     'query' : """
               SELECT DISTINCT(ed.name) AS Term, COUNT(ed.name) as TermCount FROM course_dim cd JOIN enrollment_term_dim ed on enrollment_term_id = ed.id GROUP BY ed.name ORDER BY ed.name DESC
   """},

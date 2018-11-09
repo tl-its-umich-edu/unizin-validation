@@ -138,12 +138,14 @@ def load_Unizin_to_CSV(tablename):
         curs.execute(query.get('query'))
         writer.writerows(curs.fetchall())
 
-def email_results(filename):
+def email_results(filename, subject=None):
     with open(filename) as fp:
     # Create a text/plain message
         msg = MIMEText(fp.read())
 
-    msg['Subject'] = f"CSV Validation for {filename}"
+    if (not subject):
+        subject = f"CSV Validation for {filename}"
+    msg['Subject'] = subject
     msg['From'] = os.getenv("SMTP_FROM")
     msg['To'] = os.getenv("SMTP_TO")
 
@@ -193,7 +195,8 @@ elif option == 5:
     # Only run this query
     key = "number_of_courses_by_term"
     load_Unizin_to_CSV(key)
-    email_results(UNIZIN_FILE.format(table=key))
+    subject = dbqueries.QUERIES[key].get('query_name')
+    email_results(UNIZIN_FILE.format(table=key), subject=subject)
 else: 
     print(f"{option} is not currently a valid option")
 
