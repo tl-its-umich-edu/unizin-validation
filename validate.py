@@ -1,18 +1,6 @@
-# simple.py - very simple example of plain DBAPI-2.0 usage
+# validate.py - Unizin UCDM and UCW validator
 #
-# currently used as test-me-stress-me script for psycopg 2.0
-#
-# Copyright (C) 2001-2010 Federico Di Gregorio  <fog@debian.org>
-#
-# psycopg2 is free software: you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License as published
-# by the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# psycopg2 is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
-# License for more details.
+# Copyright (C) 2018 University of Michigan Teaching and Learning
 
 UNIZIN_FILE = "unizin_{table}.csv"
 
