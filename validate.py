@@ -9,7 +9,9 @@ ERRORS_FILE = open("u_errors.txt", "w")
 
 ## don't modify anything below this line (except for experimenting)
 
-import sys, os, csv, itertools, argparse
+import sys, os, csv, itertools, argparse, smtplib
+
+from email.mime.text import MIMEText
 
 import psycopg2
 
@@ -136,6 +138,20 @@ def load_Unizin_to_CSV(tablename):
         curs.execute(query.get('query'))
         writer.writerows(curs.fetchall())
 
+def email_results(filename):
+    with open(filename) as fp:
+    # Create a text/plain message
+        msg = MIMEText(fp.read())
+
+    msg['Subject'] = f"CSV Validation for {filename}"
+    msg['From'] = os.getenv("SMTP_FROM")
+    msg['To'] = os.getenv("SMTP_TO")
+
+    print (f"Emailing out {filename}")
+    server = smtplib.SMTP(os.getenv("SMTP_HOST"), os.getenv("SMTP_PORT"), None, 5)
+    server.send_message(msg)
+    server.quit()
+
 #select_tables = ['academic_term']
 select_tables = list(csv.reader([os.getenv("SELECT_TABLES", "academic_term")]))[0]
 
@@ -175,7 +191,9 @@ elif option == 4:
             compare_CSV(key)
 elif option == 5:
     # Only run this query
-    load_Unizin_to_CSV("number_of_courses_by_term")
+    key = "number_of_courses_by_term"
+    load_Unizin_to_CSV(key)
+    email_results(UNIZIN_FILE.format(table=key))
 else: 
     print(f"{option} is not currently a valid option")
 
