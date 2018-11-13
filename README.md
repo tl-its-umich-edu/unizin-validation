@@ -11,6 +11,10 @@ To run this
 3. Manually Download the CSV files that are loaded from the S3 bucket (This may be automated in the future for automated validation)
 4. If they don't match our file names, edit dbqueries.py and edit the sis_files values to match up with your csv file names
 
+If SMTP is needed to test you can run a local SMTP server as described in sample env.
+
+`python -m smtpd -n -c DebuggingServer localhost:1025`
+
 These scripts have currently only been tested for Michigan. They also do not 100% validate yet and some of the empty columns and are a work in progress as of 2018-09-10. 
 
 Run the python script validate.py selecting first option 1 to download the data from the Postgres in Google.

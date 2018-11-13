@@ -360,7 +360,12 @@ QUERIES = {
     'dsn' : 'udw',
     'query_name': 'Count of courses by term in UDW',
     'query' : """
-              SELECT DISTINCT(ed.name) AS Term, COUNT(ed.name) as TermCount FROM course_dim cd JOIN enrollment_term_dim ed on enrollment_term_id = ed.id GROUP BY ed.name ORDER BY ed.name DESC
+              SELECT * FROM (
+                SELECT DISTINCT(ed.name) AS Term, COUNT(ed.name) as TermCount FROM course_dim cd JOIN enrollment_term_dim ed on enrollment_term_id = ed.id GROUP BY ed.name)
+              ORDER BY 
+                REGEXP_SUBSTR(term, '^\\\\D+') DESC,
+                NULLIF(REGEXP_SUBSTR(term, '.+', REGEXP_INSTR(term, '\\\\d+')+4), '') ASC NULLS FIRST,
+                REGEXP_SUBSTR(term, '\\\\d+') DESC
   """},
 
 }
