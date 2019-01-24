@@ -23,5 +23,9 @@ The run Option 2 to validate all tables.
 
 Option 3 will run all the tables except course_section_enrollment which currently has a lot of columns that don't match up.
 
+To build this on docker you can do
+
+docker build -t unizin-sis-validate . && docker run -d --env-file .env unizin-sis-validate
+
 TODO: 
 Add automatic download from S3 bucket for SIS CSV files using boto3
