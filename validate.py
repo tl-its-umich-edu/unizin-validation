@@ -12,6 +12,9 @@ ERRORS_FILE = open("u_errors.txt", "w")
 import sys, os, csv, itertools, argparse, smtplib
 
 from email.mime.text import MIMEText
+from collections import OrderedDict 
+
+from dateutil import parser as dparser
 
 import psycopg2
 
@@ -131,20 +134,34 @@ def load_Unizin_to_CSV(tablename):
         outputquery = "COPY ({0}) TO STDOUT WITH CSV HEADER FORCE QUOTE *".format(query.get('query'))
         curs.copy_expert(outputquery, UWriter)
     except psycopg2.ProgrammingError:
-        print ("Copy query failed, trying regular query, possibly 8.0")
+        print ("Copy query failed, trying regular query, possibly Postgres 8.0")
         writer = csv.writer(UWriter)
 
         conn.reset()
         curs.execute(query.get('query'))
         writer.writerows(curs.fetchall())
 
-def email_results(filename, subject=None):
-    with open(filename) as fp:
+def email_results(filenames, subject=None):
+    #Email results, all filenames should be csv with key/value pairs
+    msg_text = ""
+    # If the file name is not a list make it a list
+    od = OrderedDict()
+    if not isinstance(filenames, list):
+        filenames = [filenames,]
+    for filename in filenames:
+        rows = csv.reader(open(filename, 'r'))
+        for row in rows:
+            msg_text += f"{row[0]} : {row[1]}\n"
+            od[row[0]] = row[1]
     # Create a text/plain message
-        msg = MIMEText(fp.read())
+    msg = MIMEText(msg_text)
 
     if (not subject):
-        subject = f"CSV Validation for {filename}"
+        subject = f"CSV Validation Email"
+    # Try to append the date to the subject
+    canvas_date = dparser.parse(od.get('canvasdatadate'))
+    if canvas_date:
+        subject = f"{subject} for {canvas_date:%B %d, %Y}"
     msg['Subject'] = subject
     msg['From'] = os.getenv("SMTP_FROM")
     msg['To'] = os.getenv("SMTP_TO")
@@ -171,7 +188,7 @@ if (not option):
     2 = Import *select* table(s) from GCloud to CSV (need developer VPN or other connection setup)
     3 = Load/Compare *All* CSV files
     4 = Load/Compare *select* table(s)
-    5 = Import/Compare for Canvas data loaded into Unizin 
+    5 = Email/Verification job data loaded into Unizin (Special Case)
     """)
     print ("'Select table(s)' are: ", ', '.join(select_tables))
     option = int(input())
@@ -192,11 +209,11 @@ elif option == 4:
         if key in select_tables:
             compare_CSV(key)
 elif option == 5:
-    # Only run this query
-    key = "number_of_courses_by_term"
-    load_Unizin_to_CSV(key)
-    subject = dbqueries.QUERIES[key].get('query_name')
-    email_results(UNIZIN_FILE.format(table=key), subject=subject)
+    # Only run these queries
+    load_Unizin_to_CSV("number_of_courses_by_term")
+    load_Unizin_to_CSV("unizin_metadata")
+    subject = dbqueries.QUERIES["number_of_courses_by_term"].get('query_name')
+    email_results([UNIZIN_FILE.format(UNIZIN_FILE.format(table="unizin_metadata"),table="number_of_courses_by_term")], subject=subject)
 else: 
     print(f"{option} is not currently a valid option")
 
