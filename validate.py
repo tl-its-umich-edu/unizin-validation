@@ -213,7 +213,7 @@ elif option == 5:
     load_Unizin_to_CSV("number_of_courses_by_term")
     load_Unizin_to_CSV("unizin_metadata")
     subject = dbqueries.QUERIES["number_of_courses_by_term"].get('query_name')
-    email_results([UNIZIN_FILE.format(UNIZIN_FILE.format(table="unizin_metadata"),table="number_of_courses_by_term")], subject=subject)
+    email_results([UNIZIN_FILE.format(table="unizin_metadata"),UNIZIN_FILE.format(table="number_of_courses_by_term")], subject=subject)
 else: 
     print(f"{option} is not currently a valid option")
 
