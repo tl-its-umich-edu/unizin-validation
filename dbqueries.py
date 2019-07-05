@@ -371,7 +371,7 @@ QUERIES = {
   """},
 'unizin_metadata' : {
     'index' : '',
-    'sis_file' : 'unizin_metadata.csv',
+    'sis_file' : 'metadata.csv',
     'dsn' : 'udw',
     'query_name': 'Unizin Metadata',
     'query' : """

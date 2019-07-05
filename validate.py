@@ -2,14 +2,11 @@
 #
 # Copyright (C) 2018 University of Michigan Teaching and Learning
 
-UNIZIN_FILE = "unizin_{table}.csv"
-
-RESULTS_FILE = open("u_results.txt", "w")
-ERRORS_FILE = open("u_errors.txt", "w")
+UNIZIN_FILE_FORMAT = "unizin_{table}.csv"
 
 ## don't modify anything below this line (except for experimenting)
 
-import sys, os, csv, itertools, argparse, smtplib
+import sys, os, csv, itertools, argparse, smtplib, tempfile, json
 
 from email.mime.text import MIMEText
 from collections import OrderedDict 
@@ -28,8 +25,18 @@ from operator import itemgetter
 
 from tqdm import tqdm
 
-from dotenv import load_dotenv
-load_dotenv()
+
+try:
+    with open(os.getenv("ENV_FILE", "/unizin-csv-validation/config/env.json")) as f:
+        ENV = json.load(f)
+except FileNotFoundError as fnfe:
+    print("Default config file or one defined in environment variable ENV_FILE not found. This is normal for the build, should define for operation")
+    # Set ENV so collectstatic will still run in the build
+    ENV = os.environ
+
+OUT_DIR = ENV.get("TMP_DIR", "/tmp/")
+RESULTS_FILE = open(OUT_DIR + "u_results.txt", "w")
+ERRORS_FILE = open(OUT_DIR + "u_errors.txt", "w")
 
 class SimpleQuoter(object):
     @staticmethod
@@ -63,11 +70,11 @@ def close_compare(i, j):
 
 def compare_CSV(tablename):
     RESULTS_FILE.write(f"Comparing on {tablename}\n")
-    sis_file = dbqueries.QUERIES[tablename]['sis_file'].format(date=os.getenv("SIS_DATE"))
+    sis_file = dbqueries.QUERIES[tablename]['sis_file'].format(date=ENV.get("SIS_DATE"))
     index = dbqueries.QUERIES[tablename]['index']
     try:    
         SIS_df = load_CSV_to_dict(sis_file.format(table=tablename), index)
-        Unizin_df = load_CSV_to_dict(UNIZIN_FILE.format(table=tablename), index)
+        Unizin_df = load_CSV_to_dict(OUT_DIR + UNIZIN_FILE_FORMAT.format(table=tablename), index)
     except Exception as e:
         print ("Exception ",e)
         return
@@ -118,10 +125,10 @@ def compare_CSV(tablename):
                 continue
 
 def load_Unizin_to_CSV(tablename):
-    out_filename = UNIZIN_FILE.format(table=tablename)
+    out_filename = OUT_DIR + UNIZIN_FILE_FORMAT.format(table=tablename)
     print (f"Loading ucdm {tablename} table to {out_filename}")
     # The DSN might switch depending on the data file
-    conn = psycopg2.connect(os.getenv("DSN_"+dbqueries.QUERIES[tablename]['dsn']))
+    conn = psycopg2.connect(ENV.get("DSN_"+dbqueries.QUERIES[tablename]['dsn']))
     
     curs = conn.cursor()
 
@@ -163,16 +170,16 @@ def email_results(filenames, subject=None):
     if canvas_date:
         subject = f"{subject} for {canvas_date:%B %d, %Y}"
     msg['Subject'] = subject
-    msg['From'] = os.getenv("SMTP_FROM")
-    msg['To'] = os.getenv("SMTP_TO")
+    msg['From'] = ENV.get("SMTP_FROM")
+    msg['To'] = ENV.get("SMTP_TO")
 
     print (f"Emailing out {filename}")
-    server = smtplib.SMTP(os.getenv("SMTP_HOST"), os.getenv("SMTP_PORT"), None, 5)
+    server = smtplib.SMTP(ENV.get("SMTP_HOST"), ENV.get("SMTP_PORT"), None, 5)
     server.send_message(msg)
     server.quit()
 
 #select_tables = ['academic_term']
-select_tables = list(csv.reader([os.getenv("SELECT_TABLES", "academic_term")]))[0]
+select_tables = list(csv.reader([ENV.get("SELECT_TABLES", "academic_term")]))[0]
 
 print (select_tables)
 
@@ -213,8 +220,11 @@ elif option == 5:
     load_Unizin_to_CSV("number_of_courses_by_term")
     load_Unizin_to_CSV("unizin_metadata")
     subject = dbqueries.QUERIES["number_of_courses_by_term"].get('query_name')
-    email_results([UNIZIN_FILE.format(table="unizin_metadata"),UNIZIN_FILE.format(table="number_of_courses_by_term")], subject=subject)
+    email_results([OUT_DIR + UNIZIN_FILE_FORMAT.format(table="unizin_metadata"),OUT_DIR + UNIZIN_FILE_FORMAT.format(table="number_of_courses_by_term")], subject=subject)
 else: 
     print(f"{option} is not currently a valid option")
+
+RESULTS_FILE.close()
+ERRORS_FILE.close()
 
 sys.exit(0)
