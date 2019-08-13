@@ -172,6 +172,7 @@ def email_results(filenames, subject=None):
     msg['Subject'] = subject
     msg['From'] = ENV.get("SMTP_FROM")
     msg['To'] = ENV.get("SMTP_TO")
+    msg['Precedence'] = 'bulk'
 
     print (f"Emailing out {filename}")
     server = smtplib.SMTP(ENV.get("SMTP_HOST"), ENV.get("SMTP_PORT"), None, 5)
