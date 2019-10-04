@@ -1,3 +1,4 @@
-*.csv
+venv/
 .env
-env.json
+.idea
+__pycache__
