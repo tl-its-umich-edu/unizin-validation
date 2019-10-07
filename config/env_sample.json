@@ -1,0 +1,23 @@
+{
+    "/*  Fill in values for database host, port, name, user, and password!": "*/",
+    "UDW": {
+        "type": "PostgreSQL",
+        "params": {
+            "host": "",
+            "port": "",
+            "dbname": "",
+            "user": "",
+            "password": ""
+        }
+    },
+    "OUT_DIR": "data/",
+    "/*  Test this with python -m smtpd -n -c DebuggingServer localhost:1025": "*/",
+    "/* Host name of SMTP to send mail": "*/",
+    "SMTP_HOST": "localhost",
+    "/* Port for SMTP": "*/",
+    "SMTP_PORT": 1025,
+    "/* From address of SMTP for mail": "*/",
+    "SMTP_FROM": "",
+    "/* To address of SMTP for mail": "*/",
+    "SMTP_TO": ""
+}

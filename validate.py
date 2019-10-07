@@ -1,111 +1,118 @@
-# validate.py - Unizin UDW validator
+# validate.py - Unizin Data Warehouse validator
 #
-# Copyright (C) 2019 University of Michigan Teaching and Learning
+# Copyright (C) 2019 University of Michigan ITS Teaching and Learning
 
-UNIZIN_FILE_FORMAT = "unizin_{table}.csv"
+# Local modules
+from dbqueries import QUERIES
 
-## don't modify anything below this line (except for experimenting)
+# Standard modules
+import json, logging, os, smtplib, sys
+from datetime import datetime
 
-import sys, os, csv, itertools, argparse, smtplib, tempfile, json
-
+# Third-party modules
 from email.mime.text import MIMEText
-from collections import OrderedDict 
-
-from dateutil import parser as dparser
-
-import psycopg2
-
-import numpy as np
 import pandas as pd
+import psycopg2, pytz
 
-import dbqueries
+# Global variables
 
-from collections import OrderedDict
-from operator import itemgetter
-
-from tqdm import tqdm
-
+logging.basicConfig(level="DEBUG")
+logger = logging.getLogger(__name__)
 
 try:
-    with open(os.getenv("ENV_FILE", "/unizin-csv-validation/config/env.json")) as f:
+    with open(os.getenv("ENV_FILE", "config/env.json")) as f:
         ENV = json.load(f)
 except FileNotFoundError as fnfe:
-    print("Default config file or one defined in environment variable ENV_FILE not found. This is normal for the build, should define for operation")
+    logger.info("Default config file or one defined in environment variable ENV_FILE not found. This is normal for the build, should define for operation.")
     # Set ENV so collectstatic will still run in the build
     ENV = os.environ
 
-OUT_DIR = ENV.get("TMP_DIR", "/tmp/")
-RESULTS_FILE = open(OUT_DIR + "u_results.txt", "w")
-ERRORS_FILE = open(OUT_DIR + "u_errors.txt", "w")
+OUT_DIR = ENV.get("OUT_DIR", "data/")
 
-def load_unizin_to_csv(tablename):
-    out_filename = OUT_DIR + UNIZIN_FILE_FORMAT.format(table=tablename)
-    print (f"Loading {tablename} table to {out_filename}")
-    # The DSN might switch depending on the data file
-    conn = psycopg2.connect(ENV.get("DSN_"+dbqueries.QUERIES[tablename]['dsn']))
-    
-    curs = conn.cursor()
 
-    query = dbqueries.QUERIES[tablename]
-    if (query.get('prequery')):
-        curs.execute(query.get('prequery'))
-    UWriter = open(out_filename,"w")
-    # Try this first with this, breaks in 8.0 though :()
-    try:
-        outputquery = "COPY ({0}) TO STDOUT WITH CSV HEADER FORCE QUOTE *".format(query.get('query'))
-        curs.copy_expert(outputquery, UWriter)
-    except psycopg2.ProgrammingError:
-        print ("Copy query failed, trying regular query, possibly Postgres 8.0")
-        writer = csv.writer(UWriter)
+# Functions
 
-        conn.reset()
-        curs.execute(query.get('query'))
-        writer.writerows(curs.fetchall())
+def establish_db_connection(db_name):
+    db_config = ENV[db_name]
+    if db_config['type'] == "PostgreSQL":
+        conn = psycopg2.connect(**db_config['params'])
+    else:
+        logger.debug(f"The database type {db_config['type']} was not recognized")
+        # If we need other database connections, we can add these here.
+        # A catch-all can could be creating an engine with SQLAlchemy.
+    return conn
 
-def email_results(filenames, subject=None):
-    #Email results, all filenames should be csv with key/value pairs
+
+def calculate_table_counts_for_db(db_name, table_names):
+    db_conn = establish_db_connection(db_name)
+    table_count_dfs = []
+    for table_name in table_names:
+        count = pd.read_sql(f"""
+            SELECT COUNT(*) AS record_count FROM {table_name};
+        """, db_conn)
+        count_df = count.assign(**{"table_name": table_name})
+        table_count_dfs.append(count_df)
+    table_counts_df = pd.concat(table_count_dfs)
+    table_counts_df = table_counts_df[['table_name', 'record_count']]
+    db_conn.close()
+    return table_counts_df
+
+
+def execute_query_and_write_to_csv(query_dict):
+    out_file_path = OUT_DIR + query_dict["output_file_name"]
+    if query_dict["type"] == "standard":
+        db_conn = establish_db_connection(query_dict["data_source"])
+        output_df = pd.read_sql(query_dict["query"], db_conn)
+        db_conn.close()
+    elif query_dict['type'] == "table_counts":
+        output_df = calculate_table_counts_for_db(query_dict["data_source"], query_dict["tables"])
+    else:
+        logger.debug(f"{query_dict['type']} is not currently a valid query type option.")
+        output_df = pd.DataFrame()
+    logger.info(f"Writing results of {query_key} query to {out_file_path}")
+    with open(out_file_path, "w", encoding="utf-8") as output_file:
+        output_file.write(output_df.to_csv(index=False))
+    return out_file_path
+
+
+def email_results(results_dict, subject=None):
+    # All file_paths should point to a CSV with key-value pairs
     msg_text = ""
-    # If the file name is not a list make it a list
-    od = OrderedDict()
-    if not isinstance(filenames, list):
-        filenames = [filenames,]
-    for filename in filenames:
-        rows = csv.reader(open(filename, 'r'))
-        for row in rows:
+    for query_name in results_dict.keys():
+        msg_text += '\n- - -\n\n'
+        msg_text += f"** {query_name} **\n"
+        result_df = pd.read_csv(results_dict[query_name])
+        columns = result_df.columns
+        msg_text += f"{columns[0]} : {columns[1]}\n"
+        for row_tup in result_df.iterrows():
+            row = row_tup[1].to_list()
             msg_text += f"{row[0]} : {row[1]}\n"
-            od[row[0]] = row[1]
-    # Create a text/plain message
-    msg = MIMEText(msg_text)
 
-    if (not subject):
-        subject = f"CSV Validation Email"
-    # Try to append the date to the subject
-    canvas_date = dparser.parse(od.get('canvasdatadate'))
-    if canvas_date:
-        subject = f"{subject} for {canvas_date:%B %d, %Y}"
-    msg['Subject'] = subject
+    # Create a plain text message
+    msg = MIMEText(msg_text)
+    now = datetime.now(tz=pytz.UTC)
+    msg['Subject'] = subject + f" for {now:%B %d, %Y}"
     msg['From'] = ENV.get("SMTP_FROM")
     msg['To'] = ENV.get("SMTP_TO")
     msg['Reply-To'] = ENV.get("SMTP_TO")
     msg['Precedence'] = 'list'
 
-    print (f"Emailing out {filename}")
+    logger.info(f"Emailing out results to {msg['To']}")
     server = smtplib.SMTP(ENV.get("SMTP_HOST"), ENV.get("SMTP_PORT"), None, 5)
     server.send_message(msg)
     server.quit()
 
-#select_tables = ['academic_term']
-select_tables = list(csv.reader([ENV.get("SELECT_TABLES", "academic_term")]))[0]
 
-print (select_tables)
+# Main Program
 
-load_unizin_to_csv("number_of_courses_by_term")
-load_unizin_to_csv("unizin_metadata")
-
-subject = dbqueries.QUERIES["number_of_courses_by_term"].get('query_name')
-email_results([OUT_DIR + UNIZIN_FILE_FORMAT.format(table="unizin_metadata"),OUT_DIR + UNIZIN_FILE_FORMAT.format(table="number_of_courses_by_term")], subject=subject)
-
-RESULTS_FILE.close()
-ERRORS_FILE.close()
-
-sys.exit(0)
+if __name__ == "__main__":
+    # Run standard UDW validation process
+    subject = "UDW Daily Status Report"
+    query_keys = ["unizin_metadata", "number_of_courses_by_term", "udw_table_counts"]
+    results = {}
+    for query_key in query_keys:
+        query = QUERIES[query_key]
+        csv_path = execute_query_and_write_to_csv(query)
+        results[query["query_name"]] = csv_path
+    email_results(results, subject)
+    sys.exit(0)
