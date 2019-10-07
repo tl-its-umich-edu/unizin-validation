@@ -2,11 +2,13 @@
     "/*  Fill in values for database host, port, name, user, and password!": "*/",
     "UDW": {
         "type": "PostgreSQL",
-        "host": "",
-        "port": "",
-        "name": "",
-        "user": "",
-        "password": ""
+        "params": {
+            "host": "",
+            "port": "",
+            "dbname": "",
+            "user": "",
+            "password": ""
+        }
     },
     "OUT_DIR": "data/",
     "/*  Test this with python -m smtpd -n -c DebuggingServer localhost:1025": "*/",

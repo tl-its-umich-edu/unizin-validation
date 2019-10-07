@@ -23,7 +23,7 @@ try:
     with open(os.getenv("ENV_FILE", "config/env.json")) as f:
         ENV = json.load(f)
 except FileNotFoundError as fnfe:
-    logger.debug("Default config file or one defined in environment variable ENV_FILE not found. This is normal for the build, should define for operation.")
+    logger.info("Default config file or one defined in environment variable ENV_FILE not found. This is normal for the build, should define for operation.")
     # Set ENV so collectstatic will still run in the build
     ENV = os.environ
 
@@ -33,17 +33,11 @@ OUT_DIR = ENV.get("OUT_DIR", "data/")
 # Functions
 
 def establish_db_connection(db_name):
-    conn_params = ENV.get(db_name)
-    if conn_params['type'] == "PostgreSQL":
-        conn = psycopg2.connect(
-            host=conn_params["host"],
-            user=conn_params["user"],
-            port=conn_params["port"],
-            password=conn_params["password"],
-            dbname=conn_params["name"]
-        )
+    db_config = ENV[db_name]
+    if db_config['type'] == "PostgreSQL":
+        conn = psycopg2.connect(**db_config['params'])
     else:
-        logger.debug(f"The database type {conn_params['type']} was not recognized")
+        logger.debug(f"The database type {db_config['type']} was not recognized")
         # If we need other database connections, we can add these here.
         # A catch-all can could be creating an engine with SQLAlchemy.
     return conn
@@ -96,7 +90,6 @@ def email_results(results_dict, subject=None):
 
     # Create a plain text message
     msg = MIMEText(msg_text)
-
     now = datetime.now(tz=pytz.UTC)
     msg['Subject'] = subject + f" for {now:%B %d, %Y}"
     msg['From'] = ENV.get("SMTP_FROM")
