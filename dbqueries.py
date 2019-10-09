@@ -1,6 +1,8 @@
+from datetime import datetime
+import pytz
+
 QUERIES = {
     'number_of_courses_by_term': {
-        'index': 'term',
         'output_file_name': 'number_of_courses_by_term.csv',
         'data_source': 'UDW',
         'query_name': 'UDW Course Counts by Term',
@@ -17,20 +19,26 @@ QUERIES = {
             ORDER BY REGEXP_SUBSTR(term, '^\\\\D+') DESC,
             NULLIF(REGEXP_SUBSTR(term, '.+', REGEXP_INSTR(term, '\\\\d+')+4), '') ASC NULLS FIRST, 
                 REGEXP_SUBSTR(term, '\\\\d+') DESC;
-        """
+        """,
+        'checks': {}
     },
     'unizin_metadata': {
-        'index': '',
         'output_file_name': 'unizin_metadata.csv',
         'data_source': 'UDW',
         'query_name': 'Unizin Metadata',
         'type': 'standard',
         'query': """
             SELECT * FROM unizin_metadata;
-        """
+        """,
+        'checks': {
+            'less_than_two_days': {
+                'level': 'yellow',
+                'condition': (lambda x: (datetime.now(tz=pytz.UTC) - datetime.fromisoformat(x)).days < 2),
+                'rows_to_ignore': [0]
+            }
+        }
     },
     'udw_table_counts': {
-        'index': '',
         'output_file_name': 'udw_table_counts.csv',
         'data_source': 'UDW',
         'query_name': 'UDW Table Record Counts',
@@ -45,6 +53,13 @@ QUERIES = {
             'SUBMISSION_DIM',
             'SUBMISSION_FACT',
             'USER_DIM',
-        ]
+        ],
+        'checks': {
+            'not_zero': {
+                'level': 'red',
+                'condition': (lambda x: x != 0),
+                'rows_to_ignore': []
+            }
+        }
     }
 }

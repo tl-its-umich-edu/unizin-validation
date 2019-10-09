@@ -8,9 +8,11 @@ from dbqueries import QUERIES
 # Standard modules
 import json, logging, os, smtplib, sys
 from datetime import datetime
+from collections import namedtuple
 
 # Third-party modules
 from email.mime.text import MIMEText
+import numpy as np
 import pandas as pd
 import psycopg2, pytz
 
@@ -18,6 +20,7 @@ import psycopg2, pytz
 
 logging.basicConfig(level="DEBUG")
 logger = logging.getLogger(__name__)
+FLAG = " <-- "
 
 try:
     with open(os.getenv("ENV_FILE", "config/env.json")) as f:
@@ -59,6 +62,7 @@ def calculate_table_counts_for_db(db_name, table_names):
 
 
 def execute_query_and_write_to_csv(query_dict):
+    # All output_dfs should be key-value pairs (two columns)
     out_file_path = OUT_DIR + query_dict["output_file_name"]
     if query_dict["type"] == "standard":
         db_conn = establish_db_connection(query_dict["data_source"])
@@ -69,29 +73,62 @@ def execute_query_and_write_to_csv(query_dict):
     else:
         logger.debug(f"{query_dict['type']} is not currently a valid query type option.")
         output_df = pd.DataFrame()
-    logger.info(f"Writing results of {query_key} query to {out_file_path}")
+    logger.info(f"Writing results of {query_dict['query_name']} query to {out_file_path}")
     with open(out_file_path, "w", encoding="utf-8") as output_file:
         output_file.write(output_df.to_csv(index=False))
-    return out_file_path
+    return output_df
 
 
-def email_results(results_dict, subject=None):
-    # All file_paths should point to a CSV with key-value pairs
-    msg_text = ""
-    for query_name in results_dict.keys():
-        msg_text += '\n- - -\n\n'
-        msg_text += f"** {query_name} **\n"
-        result_df = pd.read_csv(results_dict[query_name])
-        columns = result_df.columns
-        msg_text += f"{columns[0]} : {columns[1]}\n"
-        for row_tup in result_df.iterrows():
-            row = row_tup[1].to_list()
-            msg_text += f"{row[0]} : {row[1]}\n"
+def run_checks_on_output(checks_dict, output_df):
+    red_flag_raised = False
+    yellow_flag_raised = False
+    for check_name in checks_dict.keys():
+        check = checks_dict[check_name]
+        check_func = check['condition']
+        output_df[check_name] = output_df.iloc[:, 1]
+        if len(check['rows_to_ignore']) > 0:
+            output_df[check_name][check['rows_to_ignore']] = np.nan
+        output_df[check_name] = output_df[check_name].map(check_func, na_action='ignore')
+        if False in output_df[check_name].to_list():
+            if checks_dict[check_name]['level'] == 'red':
+                logger.info("Raising red flag")
+                red_flag_raised = True
+            elif checks_dict[check_name]['level'] == 'yellow':
+                logger.info("Raising yellow flag")
+                yellow_flag_raised = True
+    checked_output_df = output_df
+    ChecksResult = namedtuple("ChecksResult", ["checked_output_df", "red_flag_raised", "yellow_flag_raised"])
+    return ChecksResult(checked_output_df, red_flag_raised, yellow_flag_raised)
 
+
+def generate_result_text(query_name, checked_query_output_df):
+    columns = checked_query_output_df.columns
+    result_text = f"{columns[0]} : {columns[1]}\n"
+    total_flags = 0
+    for row_tup in checked_query_output_df.iterrows():
+        row = row_tup[1]
+        result_text += f"{row[0]} : {row[1]}"
+        # Generate flag labels for check failures
+        row_flag_labels = []
+        for index, value in row[2:].items():
+            if value is False:
+                row_flag_labels.append(f'"{index}" condition failed')
+        if len(row_flag_labels) > 0:
+            flag_text = "; ".join(row_flag_labels)
+            result_text += FLAG + flag_text
+        result_text += "\n"
+        total_flags += len(row_flag_labels)
+    result_header = f"\n- - -\n\n** {query_name} **\n"
+    if total_flags > 0:
+        result_header += f"!! Flagged {total_flags} possible issue(s) !!\n"
+    return result_header + result_text
+
+
+def email_results(job_name, results_text_string):
     # Create a plain text message
-    msg = MIMEText(msg_text)
+    msg = MIMEText(results_text_string)
     now = datetime.now(tz=pytz.UTC)
-    msg['Subject'] = subject + f" for {now:%B %d, %Y}"
+    msg['Subject'] = job_name + f" for {now:%B %d, %Y}"
     msg['From'] = ENV.get("SMTP_FROM")
     msg['To'] = ENV.get("SMTP_TO")
     msg['Reply-To'] = ENV.get("SMTP_TO")
@@ -107,12 +144,17 @@ def email_results(results_dict, subject=None):
 
 if __name__ == "__main__":
     # Run standard UDW validation process
-    subject = "UDW Daily Status Report"
-    query_keys = ["unizin_metadata", "number_of_courses_by_term", "udw_table_counts"]
-    results = {}
+    job = "UDW Daily Status Report"
+    query_keys = ["unizin_metadata", "udw_table_counts", "number_of_courses_by_term"]
+
+    exit_code = 0
+    results_text = ""
     for query_key in query_keys:
         query = QUERIES[query_key]
-        csv_path = execute_query_and_write_to_csv(query)
-        results[query["query_name"]] = csv_path
-    email_results(results, subject)
-    sys.exit(0)
+        query_output_df = execute_query_and_write_to_csv(query)
+        checks_result = run_checks_on_output(query['checks'], query_output_df)
+        if checks_result.red_flag_raised:
+            exit_code = 1
+        results_text += generate_result_text(query['query_name'], checks_result.checked_output_df)
+    email_results(job, results_text)
+    sys.exit(exit_code)
