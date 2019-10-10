@@ -34,7 +34,7 @@ QUERIES = {
             'less_than_two_days': {
                 'color': 'YELLOW',
                 'condition': (lambda x: (datetime.now(tz=pytz.UTC) - datetime.fromisoformat(x)).days < 2),
-                'rows_to_ignore': [0]
+                'rows_to_ignore': ['schemaversion']
             }
         }
     },

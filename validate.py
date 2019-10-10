@@ -86,7 +86,9 @@ def run_checks_on_output(checks_dict, output_df):
         check_func = check['condition']
         output_df[check_name] = output_df.iloc[:, 1]
         if len(check['rows_to_ignore']) > 0:
-            output_df[check_name][check['rows_to_ignore']] = np.nan
+            first_column = output_df.columns[0]
+            row_indexes_to_ignore = output_df[output_df[first_column].isin(check['rows_to_ignore'])].index.to_list()
+            output_df[check_name][row_indexes_to_ignore] = np.nan
         output_df[check_name] = output_df[check_name].map(check_func, na_action='ignore')
         if False in output_df[check_name].to_list():
             logger.info(f"Raising {check['color']} flag")
@@ -130,9 +132,9 @@ def email_results(subject, results_text_string):
     msg['Precedence'] = 'list'
 
     logger.info(f"Emailing out results to {msg['To']}")
-    server = smtplib.SMTP(ENV.get("SMTP_HOST"), ENV.get("SMTP_PORT"), None, 5)
-    server.send_message(msg)
-    server.quit()
+    # server = smtplib.SMTP(ENV.get("SMTP_HOST"), ENV.get("SMTP_PORT"), None, 5)
+    # server.send_message(msg)
+    # server.quit()
 
 
 # Main Program
