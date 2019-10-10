@@ -34,11 +34,9 @@ class TestFlagRaising(unittest.TestCase):
             ['table_name', 'record_count', 'not_zero'],
             checks_result.checked_output_df.columns.to_list()
         )
-        self.assertTrue(checks_result.red_flag_raised)
-        self.assertFalse(checks_result.yellow_flag_raised)
+        self.assertTrue(checks_result.flags == ["RED"])
         result_text = validate.generate_result_text(query_dict['query_name'], checks_result.checked_output_df)
         self.assertEqual(result_text.count('<-- "not_zero" condition failed'), 2)
-        print(result_text)
 
     def test_unizin_metadata_check(self):
         # Set up
@@ -55,16 +53,9 @@ class TestFlagRaising(unittest.TestCase):
             ['key', 'value', 'less_than_two_days'],
             checks_result.checked_output_df.columns.to_list()
         )
-        self.assertFalse(checks_result.red_flag_raised)
-        self.assertTrue(checks_result.yellow_flag_raised)
+        self.assertTrue(checks_result.flags == ["YELLOW"])
         result_text = validate.generate_result_text(query_dict['query_name'], checks_result.checked_output_df)
         self.assertIn('<-- "less_than_two_days" condition failed', result_text)
-        print(result_text)
 
 
 unittest.main()
-
-
-
-
-

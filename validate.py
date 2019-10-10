@@ -80,8 +80,7 @@ def execute_query_and_write_to_csv(query_dict):
 
 
 def run_checks_on_output(checks_dict, output_df):
-    red_flag_raised = False
-    yellow_flag_raised = False
+    flag_strings = []
     for check_name in checks_dict.keys():
         check = checks_dict[check_name]
         check_func = check['condition']
@@ -90,15 +89,15 @@ def run_checks_on_output(checks_dict, output_df):
             output_df[check_name][check['rows_to_ignore']] = np.nan
         output_df[check_name] = output_df[check_name].map(check_func, na_action='ignore')
         if False in output_df[check_name].to_list():
-            if checks_dict[check_name]['level'] == 'red':
+            if checks_dict[check_name]['color'] == 'red':
                 logger.info("Raising red flag")
-                red_flag_raised = True
-            elif checks_dict[check_name]['level'] == 'yellow':
+                flag_strings.append("RED")
+            elif checks_dict[check_name]['color'] == 'yellow':
                 logger.info("Raising yellow flag")
-                yellow_flag_raised = True
+                flag_strings.append("YELLOW")
     checked_output_df = output_df
-    ChecksResult = namedtuple("ChecksResult", ["checked_output_df", "red_flag_raised", "yellow_flag_raised"])
-    return ChecksResult(checked_output_df, red_flag_raised, yellow_flag_raised)
+    ChecksResult = namedtuple("ChecksResult", ["checked_output_df", "flags"])
+    return ChecksResult(checked_output_df, flag_strings)
 
 
 def generate_result_text(query_name, checked_query_output_df):
@@ -124,11 +123,11 @@ def generate_result_text(query_name, checked_query_output_df):
     return result_header + result_text
 
 
-def email_results(job_name, results_text_string):
+def email_results(subject, results_text_string):
     # Create a plain text message
     msg = MIMEText(results_text_string)
     now = datetime.now(tz=pytz.UTC)
-    msg['Subject'] = job_name + f" for {now:%B %d, %Y}"
+    msg['Subject'] = subject + f" for {now:%B %d, %Y}"
     msg['From'] = ENV.get("SMTP_FROM")
     msg['To'] = ENV.get("SMTP_TO")
     msg['Reply-To'] = ENV.get("SMTP_TO")
@@ -147,14 +146,22 @@ if __name__ == "__main__":
     job = "UDW Daily Status Report"
     query_keys = ["unizin_metadata", "udw_table_counts", "number_of_courses_by_term"]
 
-    exit_code = 0
     results_text = ""
+    flags = []
     for query_key in query_keys:
         query = QUERIES[query_key]
         query_output_df = execute_query_and_write_to_csv(query)
         checks_result = run_checks_on_output(query['checks'], query_output_df)
-        if checks_result.red_flag_raised:
-            exit_code = 1
+        flags += checks_result.flags
         results_text += generate_result_text(query['query_name'], checks_result.checked_output_df)
-    email_results(job, results_text)
+
+    flags = pd.Series(flags).drop_duplicates().to_list()
+    if len(flags) == 0:
+        flags.append("GREEN")
+    flag_prefix = f"[{', '.join(flags)}] "
+    email_results(flag_prefix + job, results_text)
+
+    exit_code = 0
+    if "RED" in flags:
+        exit_code = 1
     sys.exit(exit_code)
