@@ -132,9 +132,9 @@ def email_results(subject, results_text_string):
     msg['Precedence'] = 'list'
 
     logger.info(f"Emailing out results to {msg['To']}")
-    # server = smtplib.SMTP(ENV.get("SMTP_HOST"), ENV.get("SMTP_PORT"), None, 5)
-    # server.send_message(msg)
-    # server.quit()
+    server = smtplib.SMTP(ENV.get("SMTP_HOST"), ENV.get("SMTP_PORT"), None, 5)
+    server.send_message(msg)
+    server.quit()
 
 
 # Main Program
