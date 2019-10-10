@@ -89,12 +89,8 @@ def run_checks_on_output(checks_dict, output_df):
             output_df[check_name][check['rows_to_ignore']] = np.nan
         output_df[check_name] = output_df[check_name].map(check_func, na_action='ignore')
         if False in output_df[check_name].to_list():
-            if checks_dict[check_name]['color'] == 'red':
-                logger.info("Raising red flag")
-                flag_strings.append("RED")
-            elif checks_dict[check_name]['color'] == 'yellow':
-                logger.info("Raising yellow flag")
-                flag_strings.append("YELLOW")
+            logger.info(f"Raising {check['color']} flag")
+            flag_strings.append(check['color'])
     checked_output_df = output_df
     ChecksResult = namedtuple("ChecksResult", ["checked_output_df", "flags"])
     return ChecksResult(checked_output_df, flag_strings)
