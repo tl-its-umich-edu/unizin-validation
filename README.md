@@ -10,12 +10,8 @@ To run this
 2. Copy the env_sample.json to some local directory or somewhere on the file system
 3. Edit the values in this file to add your Google Cloud Database values
 
-If SMTP is needed to test you can run a local SMTP server as described in sample env.
-
-`python -m smtpd -n -c DebuggingServer localhost:1025`
-
 docker build -t unizin-sis-validate . && docker run -d --env-file .env unizin-sis-validate
 
 You can also run this on localhost, just pass the location of your environment file. Make sure all requirements are installed or you're in a virtual environment.
 
-`ENV_FILE=/Users/jonespm/mylasecrets/env-unizin.json python validate.py
+`ENV_FILE=/Users/jonespm/mylasecrets/env-unizin.json python validate.py`

@@ -120,23 +120,6 @@ def generate_result_text(query_name, checked_query_output_df):
         result_header += f"!! Flagged {total_flags} possible issue(s) !!\n"
     return result_header + result_text
 
-
-def email_results(subject, results_text_string):
-    # Create a plain text message
-    msg = MIMEText(results_text_string)
-    now = datetime.now(tz=pytz.UTC)
-    msg['Subject'] = subject + f" for {now:%B %d, %Y}"
-    msg['From'] = ENV.get("SMTP_FROM")
-    msg['To'] = ENV.get("SMTP_TO")
-    msg['Reply-To'] = ENV.get("SMTP_TO")
-    msg['Precedence'] = 'list'
-
-    logger.info(f"Emailing out results to {msg['To']}")
-    server = smtplib.SMTP(ENV.get("SMTP_HOST"), ENV.get("SMTP_PORT"), None, 5)
-    server.send_message(msg)
-    server.quit()
-
-
 # Main Program
 
 if __name__ == "__main__":
@@ -157,7 +140,7 @@ if __name__ == "__main__":
     if len(flags) == 0:
         flags.append("GREEN")
     flag_prefix = f"[{', '.join(flags)}] "
-    email_results(flag_prefix + job, results_text)
+    print(results_text)
 
     exit_code = 0
     if "RED" in flags:
