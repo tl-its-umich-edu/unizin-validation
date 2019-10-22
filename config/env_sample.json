@@ -1,4 +1,5 @@
 {
+    "LOG_LEVEL": "WARN",
     "/*  Fill in values for database host, port, name, user, and password!": "*/",
     "UDW": {
         "type": "PostgreSQL",
