@@ -139,9 +139,9 @@ if __name__ == "__main__":
     flags = pd.Series(flags).drop_duplicates().to_list()
     if len(flags) == 0:
         flags.append("GREEN")
-    flag_prefix = f"[{', '.join(flags)}] "
+    flag_prefix = f"[{', '.join(flags)}]"
     now = datetime.now(tz=pytz.UTC)
-    print(f"{flag_prefix}{job} for {now:%B %d, %Y}\n\n{results_text}")
+    print(f"{flag_prefix} {job} for {now:%B %d, %Y}\n\n{results_text}")
 
     if "RED" in flags:
         logger.error("Status is RED")
