@@ -140,7 +140,8 @@ if __name__ == "__main__":
     if len(flags) == 0:
         flags.append("GREEN")
     flag_prefix = f"[{', '.join(flags)}] "
-    print(results_text)
+    now = datetime.now(tz=pytz.UTC)
+    print(f"{flag_prefix}{job} for {now:%B %d, %Y}\n\n{results_text}")
 
     exit_code = 0
     if "RED" in flags:
