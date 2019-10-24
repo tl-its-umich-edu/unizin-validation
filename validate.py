@@ -143,7 +143,5 @@ if __name__ == "__main__":
     now = datetime.now(tz=pytz.UTC)
     print(f"{flag_prefix}{job} for {now:%B %d, %Y}\n\n{results_text}")
 
-    exit_code = 0
     if "RED" in flags:
-        exit_code = 1
-    sys.exit(exit_code)
+        logger.error("Status is RED")
