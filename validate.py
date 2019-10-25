@@ -18,8 +18,8 @@ import psycopg2, pytz
 
 # Global variables
 
-logging.basicConfig(level="DEBUG")
 logger = logging.getLogger(__name__)
+logging.basicConfig()
 FLAG = " <-- "
 
 try:
@@ -32,6 +32,7 @@ except FileNotFoundError as fnfe:
 
 OUT_DIR = ENV.get("OUT_DIR", "data/")
 
+logger.setLevel(ENV.get("LOG_LEVEL", "DEBUG"))
 
 # Functions
 
