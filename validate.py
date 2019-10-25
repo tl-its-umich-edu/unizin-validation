@@ -34,10 +34,11 @@ OUT_DIR = ENV.get("OUT_DIR", "data/")
 
 logger.setLevel(ENV.get("LOG_LEVEL", "DEBUG"))
 
+
 # Functions
 
 def establish_db_connection(db_name):
-    db_config = ENV[db_name]
+    db_config = ENV["DATA_SOURCES"][db_name]
     if db_config['type'] == "PostgreSQL":
         conn = psycopg2.connect(**db_config['params'])
     else:
