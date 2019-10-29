@@ -4,9 +4,10 @@
 
 # Local modules
 from dbqueries import QUERIES
+from jobs import JOBS
 
 # Standard modules
-import json, logging, os, smtplib, sys
+import json, logging, os, sys
 from datetime import datetime
 from collections import namedtuple
 
@@ -122,17 +123,19 @@ def generate_result_text(query_name, checked_query_output_df):
         result_header += f"!! Flagged {total_flags} possible issue(s) !!\n"
     return result_header + result_text
 
+
 # Main Program
 
 if __name__ == "__main__":
-    # Run standard UDW validation process
-    job = "Unizin Daily Status Report"
-    query_keys = [
-        "unizin_metadata",
-        "udw_table_counts",
-        "udp_context_store_view_counts",
-        "number_of_courses_by_term",
-    ]
+    if len(sys.argv) > 1 and sys.argv[1] in JOBS:
+        job_key = sys.argv[1]
+    else:
+        # The default job is the UDW Daily Status Report.
+        job_key = "UDW"
+
+    job = JOBS[job_key]
+    job_name = job["full_name"]
+    query_keys = job["queries"]
 
     results_text = ""
     flags = []
