@@ -61,5 +61,27 @@ QUERIES = {
                 'rows_to_ignore': []
             }
         }
+    },
+    'udp_context_store_view_counts': {
+        'output_file_name': 'udp_context_store_view_counts.csv',
+        'data_source': 'UDP Context Store',
+        'query_name': 'UDP Context Store View Record Counts',
+        'type': 'table_counts',
+        'tables': [
+            'entity.learner_activity',
+            'entity.course_offering',
+            'entity.course_grade',
+            'entity.academic_term',
+            'entity.annotation',
+            'entity.learner_activity_result',
+            'entity.person',
+        ],
+        'checks': {
+            'not_zero': {
+                'color': 'YELLOW',
+                'condition': (lambda x: x != 0),
+                'rows_to_ignore': []
+            }
+        }
     }
 }

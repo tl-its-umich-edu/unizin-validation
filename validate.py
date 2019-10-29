@@ -126,8 +126,13 @@ def generate_result_text(query_name, checked_query_output_df):
 
 if __name__ == "__main__":
     # Run standard UDW validation process
-    job = "UDW Daily Status Report"
-    query_keys = ["unizin_metadata", "udw_table_counts", "number_of_courses_by_term"]
+    job = "Unizin Daily Status Report"
+    query_keys = [
+        "unizin_metadata",
+        "udw_table_counts",
+        "udp_context_store_view_counts",
+        "number_of_courses_by_term",
+    ]
 
     results_text = ""
     flags = []
