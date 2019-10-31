@@ -10,9 +10,6 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends python3-dev xmlsec1 cron && \
     apt-get clean -y
 
-# COPY startup script into known file location in container
-COPY start.sh /start.sh
-
 WORKDIR /unizin-csv-validation/
 COPY . /unizin-csv-validation/
 
@@ -20,4 +17,6 @@ COPY . /unizin-csv-validation/
 ENV TZ=America/Detroit
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-CMD ["/start.sh"]
+CMD ["python", "validate.py"]
+
+# Done!
