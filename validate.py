@@ -4,9 +4,10 @@
 
 # Local modules
 from dbqueries import QUERIES
+from jobs import JOBS
 
 # Standard modules
-import json, logging, os, smtplib, sys
+import json, logging, os, sys
 from datetime import datetime
 from collections import namedtuple
 
@@ -34,10 +35,11 @@ OUT_DIR = ENV.get("OUT_DIR", "data/")
 
 logger.setLevel(ENV.get("LOG_LEVEL", "DEBUG"))
 
+
 # Functions
 
 def establish_db_connection(db_name):
-    db_config = ENV[db_name]
+    db_config = ENV["DATA_SOURCES"][db_name]
     if db_config['type'] == "PostgreSQL":
         conn = psycopg2.connect(**db_config['params'])
     else:
@@ -121,12 +123,19 @@ def generate_result_text(query_name, checked_query_output_df):
         result_header += f"!! Flagged {total_flags} possible issue(s) !!\n"
     return result_header + result_text
 
+
 # Main Program
 
 if __name__ == "__main__":
-    # Run standard UDW validation process
-    job = "UDW Daily Status Report"
-    query_keys = ["unizin_metadata", "udw_table_counts", "number_of_courses_by_term"]
+    if len(sys.argv) > 1 and sys.argv[1] in JOBS:
+        job_key = sys.argv[1]
+    else:
+        # The default job is the UDW Daily Status Report.
+        job_key = "UDW"
+
+    job = JOBS[job_key]
+    job_name = job["full_name"]
+    query_keys = job["queries"]
 
     results_text = ""
     flags = []
@@ -142,7 +151,7 @@ if __name__ == "__main__":
         flags.append("GREEN")
     flag_prefix = f"[{', '.join(flags)}]"
     now = datetime.now(tz=pytz.UTC)
-    print(f"{flag_prefix} {job} for {now:%B %d, %Y}\n\n{results_text}")
+    print(f"{flag_prefix} {job_name} for {now:%B %d, %Y}\n\n{results_text}")
 
     if "RED" in flags:
         logger.error("Status is RED")
