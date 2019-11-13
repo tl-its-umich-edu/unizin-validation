@@ -1,5 +1,5 @@
 # validate.py - Unizin Data Warehouse validator
-#
+
 # Copyright (C) 2019 University of Michigan ITS Teaching and Learning
 
 # Local modules
@@ -15,7 +15,7 @@ from collections import namedtuple
 from email.mime.text import MIMEText
 import numpy as np
 import pandas as pd
-import psycopg2, pytz
+import psycopg2
 
 # Global variables
 
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     if len(flags) == 0:
         flags.append("GREEN")
     flag_prefix = f"[{', '.join(flags)}]"
-    now = datetime.now(tz=pytz.UTC)
+    now = datetime.now()
     print(f"{flag_prefix} {job_name} for {now:%B %d, %Y}\n\n{results_text}")
 
     if "RED" in flags:
