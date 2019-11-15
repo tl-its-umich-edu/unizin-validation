@@ -33,18 +33,36 @@ OUT_DIR = ENV.get("OUT_DIR", "data/")
 logger.setLevel(ENV.get("LOG_LEVEL", "DEBUG"))
 
 
+# Classes
+
+class DBConnManager:
+
+    def __init__(self):
+        self.db_conns = {}
+
+    def establish_db_connection(self, db_name):
+        db_config = ENV["DATA_SOURCES"][db_name]
+        if db_config['type'] == "PostgreSQL":
+            conn = psycopg2.connect(**db_config['params'])
+            self.db_conns[db_name] = conn
+        else:
+            logger.debug(f"The database type {db_config['type']} was not recognized")
+            # If we need other database connections, we can add these here.
+            # A catch-all can could be creating an engine with SQLAlchemy.
+
+    def set_up(self, query_key_strings):
+        data_sources_for_queries = [QUERIES[query_key_string]['data_source'] for query_key_string in query_key_strings]
+        data_sources_used_by_job = pd.Series(data_sources_for_queries).drop_duplicates().to_list()
+        for data_source in data_sources_used_by_job:
+            logger.info(f"Connecting to {data_source}")
+            self.establish_db_connection(data_source)
+
+    def tear_down(self):
+        for db_conn in self.db_conns.values():
+            db_conn.close()
+
+
 # Functions
-
-def establish_db_connection(db_name):
-    db_config = ENV["DATA_SOURCES"][db_name]
-    if db_config['type'] == "PostgreSQL":
-        conn = psycopg2.connect(**db_config['params'])
-    else:
-        logger.debug(f"The database type {db_config['type']} was not recognized")
-        # If we need other database connections, we can add these here.
-        # A catch-all can could be creating an engine with SQLAlchemy.
-    return conn
-
 
 def calculate_table_counts_for_db(table_names, db_conn_obj):
     table_count_dfs = []
@@ -59,10 +77,10 @@ def calculate_table_counts_for_db(table_names, db_conn_obj):
     return table_counts_df
 
 
-def execute_query_and_write_to_csv(query_dict, db_conns_dict):
+def execute_query_and_write_to_csv(query_dict, db_conn_manager):
     # All output_dfs should be key-value pairs (two columns)
     out_file_path = OUT_DIR + query_dict["output_file_name"]
-    db_conn_obj = db_conns_dict[query_dict['data_source']]
+    db_conn_obj = db_conn_manager.db_conns[query_dict['data_source']]
     if query_dict["type"] == "standard":
         output_df = pd.read_sql(query_dict["query"], db_conn_obj)
     elif query_dict['type'] == "table_counts":
@@ -132,19 +150,15 @@ if __name__ == "__main__":
     query_keys = job["queries"]
 
     # Set up connections to data sources used by job's queries
-    db_conns = {}
-    data_sources_for_queries = [QUERIES[query_key]['data_source'] for query_key in query_keys]
-    data_sources_used_by_job = pd.Series(data_sources_for_queries).drop_duplicates().to_list()
-    for data_source in data_sources_used_by_job:
-        logger.info(f"Connecting to {data_source}")
-        db_conns[data_source] = establish_db_connection(data_source)
+    manager = DBConnManager()
+    manager.set_up(query_keys)
 
     # Execute queries and generate results text
     results_text = ""
     flags = []
     for query_key in query_keys:
         query = QUERIES[query_key]
-        query_output_df = execute_query_and_write_to_csv(query, db_conns)
+        query_output_df = execute_query_and_write_to_csv(query, manager)
         checks_result = run_checks_on_output(query['checks'], query_output_df)
         flags += checks_result.flags
         results_text += generate_result_text(query['query_name'], checks_result.checked_output_df)
@@ -157,8 +171,7 @@ if __name__ == "__main__":
     print(f"{flag_prefix} {job_name} for {now:%B %d, %Y}\n{results_text}")
 
     # Close connections to data sources
-    for db_conn in db_conns.values():
-        db_conn.close()
+    manager.tear_down()
 
     if "RED" in flags:
         logger.error("Status is RED")
