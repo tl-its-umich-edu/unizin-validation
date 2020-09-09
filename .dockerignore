@@ -1,0 +1,14 @@
+# config
+**/env.json
+venv
+
+# data
+data/*.csv
+
+# docs
+README.md
+
+# etc
+.DS_Store
+**/*.pyc
+**/__pycache__
