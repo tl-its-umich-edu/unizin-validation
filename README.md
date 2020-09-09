@@ -18,7 +18,7 @@ Depending on the environment you plan to run the application in, you may need to
 * [Python 3.8](https://docs.python.org/3/)
 * [Docker Desktop](https://www.docker.com/products/docker-desktop)
 
-## Configuration
+### Configuration
 
 Configuration variables for the program, `validate.py`, are loaded using a JSON file, typically called `env.json`.
 To create your version of this file, make a copy of the `env_sample.json` template from the project's `config` directory;
@@ -27,9 +27,9 @@ To connect to these data sources, you will likely need to use a VPN or Ethernet 
 You can also use the configuration file to set the [Python logging level](https://docs.python.org/3/library/logging.html)
 (with `LOG_LEVEL`) and the path CSV files will be written to (with `OUT_DIR`).
 
-## Installation & Usage
+### Installation & Usage
 
-### With `virtualenv`
+#### With `virtualenv`
 
 To install and run the validation program using a Python virtual environment, do the following:
 
@@ -58,7 +58,7 @@ To install and run the validation program using a Python virtual environment, do
 CSV files containing the query results will be written to the value of the `OUT_DIR` configuration variable
 (the default is the `data` directory).
 
-## With Docker
+#### With Docker
 
 The validation program can also be installed and run with Docker using volume mounts. To do so, perform the following steps:
 
