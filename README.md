@@ -65,7 +65,7 @@ CSV files containing the query results will be written to the value of the `OUT_
 #### With Docker
 
 The validation program can also be installed and run with Docker using volume mounts. To do so, perform the following steps.
-**Note**: these steps assume you are have specified the value of `OUT_DIR` as the `data` directory and that the
+**Note**: these steps assume you have specified the value of `OUT_DIR` as the `data` directory and that the
 configuration file will be found at the path `config/env.json`.
 
 1. Create directories at `~/secrets/unizin-validation` and `~/data/unizin-validation` on your machine,
