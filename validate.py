@@ -16,21 +16,20 @@ import numpy as np
 import pandas as pd
 import psycopg2
 
+
 # Global variables
 logger = logging.getLogger(__name__)
-logging.basicConfig()
 FLAG = " <-- "
 
 try:
-    with open(os.getenv("ENV_FILE", "config/env.json")) as f:
+    with open(os.getenv("ENV_FILE", os.path.join("config", "env.json"))) as f:
         ENV = json.load(f)
 except FileNotFoundError as fnfe:
-    logger.info("Default config file or one defined in environment variable ENV_FILE not found. This is normal for the build, should define for operation.")
-    # Set ENV so collectstatic will still run in the build
-    ENV = os.environ
+    logger.error(f'Configuration file could not be found; please add the JSON file to the config directory.')
+    sys.exit(1)
 
 OUT_DIR = ENV.get("OUT_DIR", "data/")
-logger.setLevel(ENV.get("LOG_LEVEL", "DEBUG"))
+logging.basicConfig(level=ENV.get("LOG_LEVEL", "DEBUG"))
 
 
 # Classes
@@ -163,7 +162,7 @@ if __name__ == "__main__":
         flags += checks_result.flags
         results_text += generate_result_text(query['query_name'], checks_result.checked_output_df)
 
-    flags = pd.Series(flags).drop_duplicates().to_list()
+    flags = pd.Series(flags, dtype=str).drop_duplicates().to_list()
     if len(flags) == 0:
         flags.append("GREEN")
     flag_prefix = f"[{', '.join(flags)}]"
