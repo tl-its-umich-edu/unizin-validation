@@ -1,5 +1,5 @@
 # FROM directive instructing base image to build upon
-FROM python:3.8-slim
+FROM python:3.10-slim
 
 COPY requirements.txt /requirements.txt
 

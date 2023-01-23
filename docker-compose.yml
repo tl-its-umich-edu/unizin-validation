@@ -1,0 +1,31 @@
+version: '3.9'
+
+x-job-base:
+  &job-base
+  volumes:
+    - '.:/app'
+    - ${HOME}/secrets/unizin-validation:/app/config/
+    - ${HOME}/data/unizin-validation:/app/data/
+  environment:
+    - ENV_FILE=config/env.json
+
+
+services:
+  udw:
+    << : *job-base
+    image: unizin-validation-image
+    build:
+      context: .
+    command: ["python", "validate.py", "UDW"]
+    container_name: unizin-validation-udw
+  unizin:
+    << : *job-base
+    image: unizin-validation-image
+    command: ["python", "validate.py", "Unizin"]
+    container_name: unizin-validation-unizin
+  test:
+    image: unizin-validation-image
+    volumes:
+      - '.:/app'
+    command: ["python", "test.py"]
+    container_name: unizin-validation-test
