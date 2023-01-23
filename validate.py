@@ -56,7 +56,6 @@ class DBConnManager:
             self.engine_data[data_source_name] = engine
 
     def __enter__(self) -> None:
-        print(data_source_data)
         for data_source_name, engine in self.engine_data.items():
             logger.debug(f"Connecting to {data_source_name}")
             self.conn_data[data_source_name] = engine.connect()

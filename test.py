@@ -1,12 +1,13 @@
+# standard modules
+from datetime import datetime, timedelta, timezone
+import unittest
+
+# third-party modules
+import pandas as pd
+
 # local modules
 from dbqueries import QUERIES
 import validate
-
-# standard modules
-from datetime import datetime, timedelta
-import pandas as pd
-import pytz
-import unittest
 
 
 class TestFlagRaising(unittest.TestCase):
@@ -66,7 +67,7 @@ class TestFlagRaising(unittest.TestCase):
     def test_unizin_metadata_check(self):
         # Set up
         delta_obj = timedelta(days=-3)
-        three_days_ago = datetime.now(tz=pytz.UTC) + delta_obj
+        three_days_ago = datetime.now(tz=timezone.utc) + delta_obj
         unizin_metadata_df = pd.DataFrame({
             'key': ['schemaversion', 'canvasdatadate'],
             'value': ['X.X.X', three_days_ago.isoformat()]

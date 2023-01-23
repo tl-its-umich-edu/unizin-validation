@@ -9,7 +9,6 @@ x-job-base:
   environment:
     - ENV_FILE=config/env.json
 
-
 services:
   udw:
     << : *job-base
