@@ -7,7 +7,7 @@
             "params": {
                 "host": "",
                 "port": "",
-                "dbname": "",
+                "name": "",
                 "user": "",
                 "password": ""
             }
@@ -17,7 +17,7 @@
             "params": {
                 "host": "",
                 "port": "",
-                "dbname": "",
+                "name": "",
                 "user": "",
                 "password": ""
             }

@@ -1,5 +1,4 @@
-from datetime import datetime
-import pytz
+from datetime import datetime, timezone
 
 QUERIES = {
     'number_of_courses_by_term': {
@@ -33,7 +32,7 @@ QUERIES = {
         'checks': {
             'less_than_two_days': {
                 'color': 'YELLOW',
-                'condition': (lambda x: (datetime.now(tz=pytz.UTC) - datetime.fromisoformat(x)).days < 2),
+                'condition': (lambda x: (datetime.now(tz=timezone.utc) - datetime.fromisoformat(x)).days < 2),
                 'rows_to_ignore': ['schemaversion']
             }
         }

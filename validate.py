@@ -2,12 +2,9 @@
 
 # Copyright (C) 2019 University of Michigan ITS Teaching and Learning
 
-# Local modules
-from dbqueries import QUERIES
-from jobs import JOBS
-
 # Standard modules
 import json, logging, os, sys
+from urllib.parse import quote_plus
 from datetime import datetime
 from collections import namedtuple
 
@@ -15,6 +12,12 @@ from collections import namedtuple
 import numpy as np
 import pandas as pd
 import psycopg2
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Connection, Engine
+
+# Local modules
+from dbqueries import QUERIES
+from jobs import JOBS
 
 
 # Global variables
@@ -31,34 +34,41 @@ except FileNotFoundError as fnfe:
 OUT_DIR = ENV.get("OUT_DIR", "data/")
 logging.basicConfig(level=ENV.get("LOG_LEVEL", "DEBUG"))
 
-
 # Classes
 
 class DBConnManager:
+    """
+    Manages setting up and tearing down SQLAlchemy engines and connections
+    """
 
-    def __init__(self):
-        self.db_conns = {}
+    engine_data: dict[str, Engine]
+    conn_data: dict[str, Connection]
 
-    def establish_db_connection(self, db_name):
-        db_config = ENV["DATA_SOURCES"][db_name]
-        if db_config['type'] == "PostgreSQL":
-            conn = psycopg2.connect(**db_config['params'])
-            self.db_conns[db_name] = conn
-        else:
-            logger.debug(f"The database type {db_config['type']} was not recognized")
-            # If we need other database connections, we can add these here.
-            # A catch-all can could be creating an engine with SQLAlchemy.
+    def __init__(self, data_source_data) -> None:
+        self.engine_data = dict()
+        self.conn_data = dict()
+        for data_source_name, data_source in data_source_data.items():
+            dialect = data_source['type'].lower()
+            params = data_source['params']
+            params['password'] = quote_plus(params['password'])
+            core_string = '{user}:{password}@{host}:{port}/{name}'.format(**params)
+            engine = create_engine(f'{dialect}://{core_string}')
+            self.engine_data[data_source_name] = engine
 
-    def set_up(self, query_key_strings):
-        data_sources_for_queries = [QUERIES[query_key_string]['data_source'] for query_key_string in query_key_strings]
-        data_sources_used_by_job = pd.Series(data_sources_for_queries).drop_duplicates().to_list()
-        for data_source in data_sources_used_by_job:
-            logger.info(f"Connecting to {data_source}")
-            self.establish_db_connection(data_source)
+    def __enter__(self) -> None:
+        print(data_source_data)
+        for data_source_name, engine in self.engine_data.items():
+            logger.debug(f"Connecting to {data_source_name}")
+            self.conn_data[data_source_name] = engine.connect()
 
-    def tear_down(self):
-        for db_conn in self.db_conns.values():
-            db_conn.close()
+    def __exit__(self, *args, **kwargs):
+        for data_source_name, connection in self.conn_data.items():
+            logger.debug(f"Closing connection for {data_source_name}")
+            connection.close()
+
+        for data_source_name, engine in self.engine_data.items():
+            logger.debug(f"Disposing of engine for {data_source_name}")
+            engine.dispose()
 
 
 # Functions
@@ -76,17 +86,18 @@ def calculate_table_counts_for_db(table_names, db_conn_obj):
     return table_counts_df
 
 
-def execute_query_and_write_to_csv(query_dict, db_conn_manager):
+def execute_query_and_write_to_csv(query_dict, db_manager: DBConnManager):
     # All output_dfs should be key-value pairs (two columns)
     out_file_path = OUT_DIR + query_dict["output_file_name"]
-    db_conn_obj = db_conn_manager.db_conns[query_dict['data_source']]
-    if query_dict["type"] == "standard":
-        output_df = pd.read_sql(query_dict["query"], db_conn_obj)
-    elif query_dict['type'] == "table_counts":
-        output_df = calculate_table_counts_for_db(query_dict["tables"], db_conn_obj)
-    else:
-        logger.debug(f"{query_dict['type']} is not currently a valid query type option.")
-        output_df = pd.DataFrame()
+    db_conn_obj = db_manager.conn_data[query_dict['data_source']]
+    match query_dict["type"]:
+        case "standard":
+            output_df = pd.read_sql(query_dict["query"], db_conn_obj)
+        case "table_counts":
+            output_df = calculate_table_counts_for_db(query_dict["tables"], db_conn_obj)
+        case _:
+            logger.error(f"{query_dict['type']} is not currently a valid query type option.")
+            output_df = pd.DataFrame()
     logger.info(f"Writing results of {query_dict['query_name']} query to {out_file_path}")
     with open(out_file_path, "w", encoding="utf-8") as output_file:
         output_file.write(output_df.to_csv(index=False))
@@ -148,29 +159,29 @@ if __name__ == "__main__":
     job_name = job["full_name"]
     query_keys = job["queries"]
 
-    # Set up connections to data sources used by job's queries
-    manager = DBConnManager()
-    manager.set_up(query_keys)
+    data_sources_for_queries = [QUERIES[query_key]['data_source'] for query_key in query_keys]
+    data_sources_used_by_job = set(data_sources_for_queries)
+
+    data_source_data = { k: v for k, v in ENV['DATA_SOURCES'].items() if k in data_sources_used_by_job }
+    db_manager = DBConnManager(data_source_data)
 
     # Execute queries and generate results text
-    results_text = ""
-    flags = []
-    for query_key in query_keys:
-        query = QUERIES[query_key]
-        query_output_df = execute_query_and_write_to_csv(query, manager)
-        checks_result = run_checks_on_output(query['checks'], query_output_df)
-        flags += checks_result.flags
-        results_text += generate_result_text(query['query_name'], checks_result.checked_output_df)
+    with db_manager:
+        results_text = ""
+        flags = []
+        for query_key in query_keys:
+            query = QUERIES[query_key]
+            query_output_df = execute_query_and_write_to_csv(query, db_manager)
+            checks_result = run_checks_on_output(query['checks'], query_output_df)
+            flags += checks_result.flags
+            results_text += generate_result_text(query['query_name'], checks_result.checked_output_df)
 
-    flags = pd.Series(flags, dtype=str).drop_duplicates().to_list()
-    if len(flags) == 0:
-        flags.append("GREEN")
-    flag_prefix = f"[{', '.join(flags)}]"
-    now = datetime.now()
-    print(f"{flag_prefix} {job_name} for {now:%B %d, %Y}\n{results_text}")
+        flag_set = set(flags)
+        if len(flag_set) == 0:
+            flag_set.add("GREEN")
+        flag_prefix = f"[{', '.join(flag_set)}]"
+        now = datetime.now()
+        print(f"{flag_prefix} {job_name} for {now:%B %d, %Y}\n{results_text}")
 
-    # Close connections to data sources
-    manager.tear_down()
-
-    if "RED" in flags:
+    if "RED" in flag_set:
         logger.error("Status is RED")
