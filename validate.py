@@ -77,7 +77,7 @@ class DBConnManager:
 
 # Functions
 
-def calculate_table_counts_for_db(table_names: list[str], db_conn_obj: Connection):
+def calculate_table_counts_for_db(table_names: list[str], db_conn_obj: Connection) -> pd.DataFrame:
     table_count_dfs = []
     for table_name in table_names:
         count = pd.read_sql(f"""
