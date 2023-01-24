@@ -1,5 +1,6 @@
 from typing import Literal, TypedDict
 
+
 # Types
 
 class DatabaseParams(TypedDict):

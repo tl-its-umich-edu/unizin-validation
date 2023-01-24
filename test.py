@@ -1,11 +1,11 @@
-# standard modules
+# Standard modules
 from datetime import datetime, timedelta, timezone
 import unittest
 
-# third-party modules
+# Third-party modules
 import pandas as pd
 
-# local modules
+# Local modules
 from dbqueries import QUERIES
 import validate
 

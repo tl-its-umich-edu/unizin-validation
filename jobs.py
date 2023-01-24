@@ -4,8 +4,10 @@
 # dictionary with two key-value pairs: the "full_name" key should have as its value a human-readable string identifying
 # the job; the "queries" key should have as its value a list of query names from dbqueries.py.
 
+# Standard modules
 from typing import Literal, TypedDict
 
+# Local modules
 from dbqueries import QueryName
 
 
