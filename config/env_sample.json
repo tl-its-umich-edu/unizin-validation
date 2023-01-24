@@ -12,7 +12,7 @@
                 "password": ""
             }
         },
-        "UDP Context Store": {
+        "UDP_Context_Store": {
             "type": "PostgreSQL",
             "params": {
                 "host": "",
