@@ -189,12 +189,12 @@ if __name__ == "__main__":
             flags += checks_result.flags
             results_text += generate_result_text(query['query_name'], checks_result.checked_output_df)
 
-        flag_set = set(flags)
-        if len(flag_set) == 0:
-            flag_set.add("GREEN")
-        flag_prefix = f"[{', '.join(flag_set)}]"
-        now = datetime.now()
-        print(f"{flag_prefix} {job_name} for {now:%B %d, %Y}\n{results_text}")
+    flag_set = set(flags)
+    if len(flag_set) == 0:
+        flag_set.add("GREEN")
+    flag_prefix = f"[{', '.join(flag_set)}]"
+    now = datetime.now()
+    print(f"{flag_prefix} {job_name} for {now:%B %d, %Y}\n{results_text}")
 
     if "RED" in flag_set:
         logger.error("Status is RED")
