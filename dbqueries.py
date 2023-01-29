@@ -32,15 +32,15 @@ class TableCountsQueryData(QueryData):
 
 
 class QueryDict(TypedDict):
-    number_of_courses_by_term: StandardQueryData
-    unizin_metadata: StandardQueryData
+    udw_number_of_courses_by_term: StandardQueryData
+    udw_unizin_metadata: StandardQueryData
     udw_table_counts: TableCountsQueryData
     udp_context_store_view_counts: TableCountsQueryData
 
 
 QueryName = Literal[
-    'number_of_courses_by_term',
-    'unizin_metadata',
+    'udw_number_of_courses_by_term',
+    'udw_unizin_metadata',
     'udw_table_counts',
     'udp_context_store_view_counts'
 ]
@@ -54,7 +54,7 @@ LESS_THAN_TWO_DAYS: Callable[[str], bool] = (lambda x: (datetime.now(tz=timezone
 # Queries configuration
 
 QUERIES: QueryDict = {
-    'number_of_courses_by_term': {
+    'udw_number_of_courses_by_term': {
         'output_file_name': 'number_of_courses_by_term.csv',
         'data_source': 'UDW',
         'query_name': 'UDW Course Counts by Term',
@@ -74,10 +74,10 @@ QUERIES: QueryDict = {
         """,
         'checks': {}
     },
-    'unizin_metadata': {
+    'udw_unizin_metadata': {
         'output_file_name': 'unizin_metadata.csv',
         'data_source': 'UDW',
-        'query_name': 'Unizin Metadata',
+        'query_name': 'UDW Unizin Metadata',
         'type': 'standard',
         'query': """
             SELECT * FROM unizin_metadata;

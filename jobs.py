@@ -32,18 +32,18 @@ JOBS: JobDict = {
     "UDW": {
         "full_name": "UDW Daily Status Report",
         "queries": [
-            "unizin_metadata",
+            "udw_unizin_metadata",
             "udw_table_counts",
-            "number_of_courses_by_term"
+            "udw_number_of_courses_by_term"
         ]
     },
     "Unizin": {
         "full_name": "Unizin Daily Status Report",
         "queries": [
-            "unizin_metadata",
+            "udw_unizin_metadata",
             "udw_table_counts",
-            "udp_context_store_view_counts",
-            "number_of_courses_by_term"
+            "udw_number_of_courses_by_term",
+            "udp_context_store_view_counts"
         ]
     }
 }
