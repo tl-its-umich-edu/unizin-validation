@@ -21,6 +21,7 @@ services:
     << : *job-base
     image: unizin-validation-image
     command: ["python", "validate.py", "UDP"]
+    container_name: unizin-validation-udp
   unizin:
     << : *job-base
     image: unizin-validation-image
