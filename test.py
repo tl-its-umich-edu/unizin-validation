@@ -72,7 +72,7 @@ class TestFlagRaising(unittest.TestCase):
             'key': ['schemaversion', 'canvasdatadate'],
             'value': ['X.X.X', three_days_ago.isoformat()]
         })
-        query_dict = QUERIES['unizin_metadata']
+        query_dict = QUERIES['udw_unizin_metadata']
         # Test
         checks_result = validate.run_checks_on_output(query_dict['checks'], unizin_metadata_df)
         self.assertCountEqual(
