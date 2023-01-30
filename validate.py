@@ -198,3 +198,5 @@ if __name__ == "__main__":
 
     if "RED" in flag_set:
         logger.error("Status is RED")
+    elif "YELLOW" in flag_set:
+        logger.warning("Status is YELLOW")
