@@ -55,7 +55,7 @@ LESS_THAN_TWO_DAYS: Callable[[str], bool] = (lambda x: (datetime.now(tz=timezone
 
 QUERIES: QueryDict = {
     'udw_number_of_courses_by_term': {
-        'output_file_name': 'number_of_courses_by_term.csv',
+        'output_file_name': 'udw_number_of_courses_by_term.csv',
         'data_source': 'UDW',
         'query_name': 'UDW Course Counts by Term',
         "type": "standard",
@@ -75,7 +75,7 @@ QUERIES: QueryDict = {
         'checks': {}
     },
     'udw_unizin_metadata': {
-        'output_file_name': 'unizin_metadata.csv',
+        'output_file_name': 'udw_unizin_metadata.csv',
         'data_source': 'UDW',
         'query_name': 'UDW Unizin Metadata',
         'type': 'standard',
