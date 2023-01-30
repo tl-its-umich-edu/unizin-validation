@@ -91,11 +91,10 @@ def calculate_table_counts_for_db(table_names: list[str], db_conn_obj: Connectio
 
 
 def execute_query_and_write_to_csv(
-    query_dict: Union[StandardQueryData, TableCountsQueryData], db_manager: DBConnManager
+    query_dict: Union[StandardQueryData, TableCountsQueryData], db_conn_obj: Connection
 ) -> pd.DataFrame:
     # All output_dfs should be key-value pairs (two columns)
     out_file_path = OUT_DIR + query_dict["output_file_name"]
-    db_conn_obj = db_manager.conn_data[query_dict['data_source']]
     match query_dict["type"]:
         case "standard":
             query_dict = cast(StandardQueryData, query_dict)
@@ -184,7 +183,8 @@ if __name__ == "__main__":
         flags = []
         for query_key in query_keys:
             query = QUERIES[query_key]
-            query_output_df = execute_query_and_write_to_csv(query, db_manager)
+            db_conn_obj = db_manager.conn_data[query['data_source']]
+            query_output_df = execute_query_and_write_to_csv(query, db_conn_obj)
             checks_result = run_checks_on_output(query['checks'], query_output_df)
             flags += checks_result.flags
             results_text += generate_result_text(query['query_name'], checks_result.checked_output_df)
