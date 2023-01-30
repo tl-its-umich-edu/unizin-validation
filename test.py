@@ -1,13 +1,13 @@
 # Standard modules
-from datetime import datetime, timedelta, timezone
 import unittest
+from datetime import datetime, timedelta, timezone
 
 # Third-party modules
 import pandas as pd
 
 # Local modules
-from dbqueries import QUERIES
 import validate
+from dbqueries import QUERIES
 
 
 class TestFlagRaising(unittest.TestCase):
