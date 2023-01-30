@@ -13,7 +13,7 @@ from dbqueries import QueryName
 
 # Types
 
-JobName = Literal['UDW', 'Unizin']
+JobName = Literal['UDW', 'UDP', 'Unizin']
 
 
 class JobData(TypedDict):
