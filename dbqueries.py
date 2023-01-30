@@ -27,21 +27,30 @@ class StandardQueryData(QueryData):
 
 
 class TableCountsQueryData(QueryData):
-    type: Literal['table_counts']
     tables: list[str]
+
+
+class RecordCountsQueryData(TableCountsQueryData):
+    type: Literal['table_record_counts']
+
+
+class DuplicateIDCountsQueryData(TableCountsQueryData):
+    type: Literal['table_dup_id_counts']
 
 
 class QueryDict(TypedDict):
     udw_number_of_courses_by_term: StandardQueryData
     udw_unizin_metadata: StandardQueryData
-    udw_table_counts: TableCountsQueryData
-    udp_context_store_view_counts: TableCountsQueryData
+    udw_table_counts: RecordCountsQueryData
+    udw_table_duplicate_ids: DuplicateIDCountsQueryData
+    udp_context_store_view_counts: RecordCountsQueryData
 
 
 QueryName = Literal[
     'udw_number_of_courses_by_term',
     'udw_unizin_metadata',
     'udw_table_counts',
+    'udw_table_duplicate_ids',
     'udp_context_store_view_counts'
 ]
 
@@ -49,6 +58,7 @@ QueryName = Literal[
 # Check functions
 
 NOT_ZERO: Callable[[int], bool] = (lambda x: x != 0)
+ZERO: Callable[[int], bool] = (lambda x: x == 0)
 LESS_THAN_TWO_DAYS: Callable[[str], bool] = (lambda x: (datetime.now(tz=timezone.utc) - datetime.fromisoformat(x)).days < 2)
 
 # Queries configuration
@@ -94,7 +104,7 @@ QUERIES: QueryDict = {
         'output_file_name': 'udw_table_counts.csv',
         'data_source': 'UDW',
         'query_name': 'UDW Table Record Counts',
-        'type': 'table_counts',
+        'type': 'table_record_counts',
         'tables': [
             'ASSIGNMENT_DIM',
             'COURSE_DIM',
@@ -114,11 +124,28 @@ QUERIES: QueryDict = {
             }
         }
     },
+    "udw_table_duplicate_ids": {
+        'output_file_name': 'udw_table_duplicate_ids.csv',
+        'data_source': 'UDW',
+        'query_name': 'UDW Table Duplicate IDs',
+        'type': 'table_dup_id_counts',
+        'tables': [
+            'course_dim',
+            'assignment_dim',
+        ],
+        'checks': {
+            'zero': {
+                'color': 'RED',
+                'condition': ZERO,
+                'rows_to_ignore': []
+            }
+        }
+    },
     'udp_context_store_view_counts': {
         'output_file_name': 'udp_context_store_view_counts.csv',
         'data_source': 'UDP_Context_Store',
         'query_name': 'UDP Context Store View Record Counts',
-        'type': 'table_counts',
+        'type': 'table_record_counts',
         'tables': [
             'entity.learner_activity',
             'entity.course_offering',

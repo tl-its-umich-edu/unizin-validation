@@ -35,7 +35,8 @@ JOBS: JobDict = {
         "queries": [
             "udw_unizin_metadata",
             "udw_table_counts",
-            "udw_number_of_courses_by_term"
+            "udw_number_of_courses_by_term",
+            "udw_table_duplicate_ids"
         ]
     },
     'UDP': {
@@ -50,6 +51,7 @@ JOBS: JobDict = {
             "udw_unizin_metadata",
             "udw_table_counts",
             "udw_number_of_courses_by_term",
+            "udw_table_duplicate_ids",
             "udp_context_store_view_counts"
         ]
     }
