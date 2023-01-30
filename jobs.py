@@ -4,22 +4,53 @@
 # dictionary with two key-value pairs: the "full_name" key should have as its value a human-readable string identifying
 # the job; the "queries" key should have as its value a list of query names from dbqueries.py.
 
-JOBS = {
+# Standard modules
+from typing import Literal, TypedDict
+
+# Local modules
+from dbqueries import QueryName
+
+
+# Types
+
+JobName = Literal['UDW', 'UDP', 'Unizin']
+
+
+class JobData(TypedDict):
+    full_name: str
+    queries: list[QueryName]
+
+
+class JobDict(TypedDict):
+    UDW: JobData
+    UDP: JobData
+    Unizin: JobData
+
+
+# Jobs configuration
+
+JOBS: JobDict = {
     "UDW": {
         "full_name": "UDW Daily Status Report",
         "queries": [
-            "unizin_metadata",
+            "udw_unizin_metadata",
             "udw_table_counts",
-            "number_of_courses_by_term"
+            "udw_number_of_courses_by_term"
+        ]
+    },
+    'UDP': {
+        "full_name": "UDP Daily Status Report",
+        "queries": [
+            "udp_context_store_view_counts"
         ]
     },
     "Unizin": {
         "full_name": "Unizin Daily Status Report",
         "queries": [
-            "unizin_metadata",
+            "udw_unizin_metadata",
             "udw_table_counts",
-            "udp_context_store_view_counts",
-            "number_of_courses_by_term"
+            "udw_number_of_courses_by_term",
+            "udp_context_store_view_counts"
         ]
     }
 }

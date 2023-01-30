@@ -7,17 +7,17 @@
             "params": {
                 "host": "",
                 "port": "",
-                "dbname": "",
+                "name": "",
                 "user": "",
                 "password": ""
             }
         },
-        "UDP Context Store": {
+        "UDP_Context_Store": {
             "type": "PostgreSQL",
             "params": {
                 "host": "",
                 "port": "",
-                "dbname": "",
+                "name": "",
                 "user": "",
                 "password": ""
             }

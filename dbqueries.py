@@ -1,9 +1,61 @@
-from datetime import datetime
-import pytz
+# Standard modules
+from datetime import datetime, timezone
+from typing import Callable, Literal, TypedDict, Union
 
-QUERIES = {
-    'number_of_courses_by_term': {
-        'output_file_name': 'number_of_courses_by_term.csv',
+# Local modules
+from data_sources import DataSourceName
+
+
+# Types
+
+class CheckData(TypedDict):
+    color: Literal['YELLOW', 'RED']
+    condition: Union[Callable[[str], bool], Callable[[int], bool]]
+    rows_to_ignore: list[str]
+
+
+class QueryData(TypedDict):
+    output_file_name: str
+    data_source: DataSourceName
+    query_name: str
+    checks: dict[str, CheckData]
+
+
+class StandardQueryData(QueryData):
+    type: Literal['standard']
+    query: str
+
+
+class TableCountsQueryData(QueryData):
+    type: Literal['table_counts']
+    tables: list[str]
+
+
+class QueryDict(TypedDict):
+    udw_number_of_courses_by_term: StandardQueryData
+    udw_unizin_metadata: StandardQueryData
+    udw_table_counts: TableCountsQueryData
+    udp_context_store_view_counts: TableCountsQueryData
+
+
+QueryName = Literal[
+    'udw_number_of_courses_by_term',
+    'udw_unizin_metadata',
+    'udw_table_counts',
+    'udp_context_store_view_counts'
+]
+
+
+# Check functions
+
+NOT_ZERO: Callable[[int], bool] = (lambda x: x != 0)
+LESS_THAN_TWO_DAYS: Callable[[str], bool] = (lambda x: (datetime.now(tz=timezone.utc) - datetime.fromisoformat(x)).days < 2)
+
+# Queries configuration
+
+QUERIES: QueryDict = {
+    'udw_number_of_courses_by_term': {
+        'output_file_name': 'udw_number_of_courses_by_term.csv',
         'data_source': 'UDW',
         'query_name': 'UDW Course Counts by Term',
         "type": "standard",
@@ -22,10 +74,10 @@ QUERIES = {
         """,
         'checks': {}
     },
-    'unizin_metadata': {
-        'output_file_name': 'unizin_metadata.csv',
+    'udw_unizin_metadata': {
+        'output_file_name': 'udw_unizin_metadata.csv',
         'data_source': 'UDW',
-        'query_name': 'Unizin Metadata',
+        'query_name': 'UDW Unizin Metadata',
         'type': 'standard',
         'query': """
             SELECT * FROM unizin_metadata;
@@ -33,7 +85,7 @@ QUERIES = {
         'checks': {
             'less_than_two_days': {
                 'color': 'YELLOW',
-                'condition': (lambda x: (datetime.now(tz=pytz.UTC) - datetime.fromisoformat(x)).days < 2),
+                'condition': LESS_THAN_TWO_DAYS,
                 'rows_to_ignore': ['schemaversion']
             }
         }
@@ -57,14 +109,14 @@ QUERIES = {
         'checks': {
             'not_zero': {
                 'color': 'RED',
-                'condition': (lambda x: x != 0),
+                'condition': NOT_ZERO,
                 'rows_to_ignore': []
             }
         }
     },
     'udp_context_store_view_counts': {
         'output_file_name': 'udp_context_store_view_counts.csv',
-        'data_source': 'UDP Context Store',
+        'data_source': 'UDP_Context_Store',
         'query_name': 'UDP Context Store View Record Counts',
         'type': 'table_counts',
         'tables': [
@@ -79,7 +131,7 @@ QUERIES = {
         'checks': {
             'not_zero': {
                 'color': 'YELLOW',
-                'condition': (lambda x: x != 0),
+                'condition': NOT_ZERO,
                 'rows_to_ignore': []
             }
         }

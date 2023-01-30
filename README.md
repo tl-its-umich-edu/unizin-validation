@@ -15,7 +15,7 @@ as part of the workflow.
 The sections below provide instructions for configuring, installing, and using the application.
 Depending on the environment you plan to run the application in, you may need to install one of the following:
 
-* [Python 3.8](https://docs.python.org/3/)
+* [Python 3.10](https://docs.python.org/3/)
 * [Docker Desktop](https://www.docker.com/products/docker-desktop)
 
 ### Configuration
@@ -33,7 +33,7 @@ variable called `ENV_FILE` before using these defaults, so the path and name exp
 
 ### Installation & Usage
 
-#### With `virtualenv`
+#### With `venv`
 
 To install and run the validation program using a Python virtual environment, do the following:
 
@@ -41,7 +41,7 @@ To install and run the validation program using a Python virtual environment, do
 
 2. Create and activate a virtual environment.
     ```sh
-    virtualenv venv
+    python3 -m venv venv
     source venv/bin/activate  # for Mac OS
     ```
 
@@ -57,14 +57,19 @@ To install and run the validation program using a Python virtual environment, do
 
     Optionally, you can specify one of two pre-defined jobs -- `UDW` or `Unizin` -- as an additional option.
     The default job value is `UDW`. The `Unizin` job includes an additional query and check against the UDP Context Store.
-    **Note**: these options are not yet supported when using Docker (see below).
 
 CSV files containing the query results will be written to the value of the `OUT_DIR` configuration variable
 (the default is the `data` directory).
 
+You can also run the test suite by issuing the following command:
+    ```
+    python test.py
+    ```
+
+
 #### With Docker
 
-The validation program can also be installed and run with Docker using volume mounts. To do so, perform the following steps.
+The validation program can also be installed and run with Docker using Docker Compose. To do so, perform the following steps.
 **Note**: these steps assume you have specified the value of `OUT_DIR` as the `data` directory and that the
 configuration file will be found at the path `config/env.json`.
 
@@ -75,16 +80,23 @@ where `~` is your user's home directory.
 
 3. Build a Docker image for the project.
     ```sh
-    docker build -t unizin-validation .
+    docker compose build
     ```
 
-4. Run a container using the just-created image and two volume mounts for input and output,
-replacing `{absolute_path}` with the absolute path to your home directory.
+4. Run one of the job services
     ```sh
-    docker run \
-        --mount type=bind,source=/{absolute_path}/secrets/unizin-validation,target=/app/config \
-        --mount type=bind,source=/{absolute_path}/data/unizin-validation,target=/app/data \
-        unizin-validation
+    # For the UDW job
+    docker compose run udw
+    # For the UDP job
+    docker compose run udp
+    # For the Unizin job
+    # (This includes all UDW and UDP queries)
+    docker compose run unizin
     ```
 
 CSV files containing the query results will be written to the `~/data/unizin-validation` directory on your machine.
+
+You can also run the test suite by issuing the following command:
+    ```
+    docker compose run test
+    ```
