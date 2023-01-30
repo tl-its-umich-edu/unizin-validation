@@ -23,6 +23,7 @@ class JobData(TypedDict):
 
 class JobDict(TypedDict):
     UDW: JobData
+    UDP: JobData
     Unizin: JobData
 
 
@@ -35,6 +36,12 @@ JOBS: JobDict = {
             "udw_unizin_metadata",
             "udw_table_counts",
             "udw_number_of_courses_by_term"
+        ]
+    },
+    'UDP': {
+        "full_name": "UDP Daily Status Report",
+        "queries": [
+            "udp_context_store_view_counts"
         ]
     },
     "Unizin": {

@@ -17,6 +17,10 @@ services:
       context: .
     command: ["python", "validate.py", "UDW"]
     container_name: unizin-validation-udw
+  udp:
+    << : *job-base
+    image: unizin-validation-image
+    command: ["python", "validate.py", "UDP"]
   unizin:
     << : *job-base
     image: unizin-validation-image

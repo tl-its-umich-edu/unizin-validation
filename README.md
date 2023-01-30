@@ -87,7 +87,10 @@ where `~` is your user's home directory.
     ```sh
     # For the UDW job
     docker compose run udw
+    # For the UDP job
+    docker compose run udp
     # For the Unizin job
+    # (This includes all UDW and UDP queries)
     docker compose run unizin
     ```
 
