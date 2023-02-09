@@ -17,7 +17,7 @@ from sqlalchemy.engine import Connection, Engine
 
 # Local modules
 from data_sources import DataSourceName, DataSource
-from dbqueries import CheckData, QUERIES, StandardQueryData, RecordCountsQueryData, DuplicateIDCountsQueryData
+from dbqueries import CheckData, QUERIES, StandardQueryData, RecordCountsQueryData
 from jobs import JobName, JOBS
 
 
@@ -95,25 +95,8 @@ class TableDuplicateIdCount(TypedDict):
     count: int
 
 
-def calculate_table_duplicate_id_counts_for_db(table_names: list[str], db_conn_obj: Connection) -> pd.DataFrame:
-    results: list[TableDuplicateIdCount] = []
-    for table_name in table_names:
-        result = pd.read_sql(f"""
-            select canvas_id, count(canvas_id)
-            from {table_name} tbl
-            where tbl.workflow_state != 'deleted'
-            group by canvas_id
-            having count(*) > 1;
-        """, db_conn_obj)
-        logger.debug(result)
-        results.append({ "table_name": table_name, "count": len(result) })
-    combined_result = pd.DataFrame.from_records(results)
-    logger.debug(combined_result)
-    return combined_result
-
-
 def execute_query_and_write_to_csv(
-    query_dict: Union[StandardQueryData, RecordCountsQueryData, DuplicateIDCountsQueryData], db_conn_obj: Connection
+    query_dict: Union[StandardQueryData, RecordCountsQueryData], db_conn_obj: Connection
 ) -> pd.DataFrame:
     # All output_dfs should be key-value pairs (two columns)
     out_file_path = OUT_DIR + query_dict["output_file_name"]
@@ -124,9 +107,6 @@ def execute_query_and_write_to_csv(
         case "table_record_counts":
             query_dict = cast(RecordCountsQueryData, query_dict)
             output_df = calculate_table_counts_for_db(query_dict["tables"], db_conn_obj)
-        case "table_dup_id_counts":
-            query_dict = cast(DuplicateIDCountsQueryData, query_dict)
-            output_df = calculate_table_duplicate_id_counts_for_db(query_dict["tables"], db_conn_obj)
         case _:
             logger.error(f"{query_dict['type']} is not currently a valid query type option.")
             output_df = pd.DataFrame()

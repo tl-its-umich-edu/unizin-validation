@@ -64,23 +64,38 @@ class TestFlagRaising(unittest.TestCase):
         result_text = validate.generate_result_text(query_dict['query_name'], checks_result.checked_output_df)
         self.assertIn('<-- "not_zero" condition failed', result_text)
 
-    def test_udw_duplicate_id_test(self):
+    def test_udw_duplicate_course_ids_test(self):
         # Set up
-        udw_duplicate_id_counts_df = pd.DataFrame({
-            'table_name': [
-                "course_dim",
-                "assignment_dim"
-            ],
-            'count': [0, 1]
+        udp_duplicate_course_ids_df = pd.DataFrame({
+            'canvas_id': [8888888, 8888889],
+            'count': [2, 3]
         })
-        query_dict = QUERIES['udw_table_duplicate_ids']
+
+        query_dict = QUERIES['udw_duplicate_course_ids']
         # Test
-        checks_result = validate.run_checks_on_output(query_dict['checks'], udw_duplicate_id_counts_df)
-        self.assertListEqual(['table_name', 'count', 'zero'], checks_result.checked_output_df.columns.to_list())
-        self.assertListEqual(['assignment_dim', 1, False], checks_result.checked_output_df.loc[1].to_list())
+        checks_result = validate.run_checks_on_output(query_dict['checks'], udp_duplicate_course_ids_df)
+        self.assertListEqual(['canvas_id', 'count', 'less_than_two'], checks_result.checked_output_df.columns.to_list())
+        self.assertListEqual([8888888, 2, False], checks_result.checked_output_df.loc[0].to_list())
+        self.assertListEqual([8888889, 3, False], checks_result.checked_output_df.loc[1].to_list())
         self.assertTrue(checks_result.flags == ['RED'])
         result_text = validate.generate_result_text(query_dict['query_name'], checks_result.checked_output_df)
-        self.assertIn('<-- "zero" condition failed', result_text)
+        self.assertIn('<-- "less_than_two" condition failed', result_text)
+
+    def test_udw_duplicate_assignment_ids_test(self):
+        # Set up
+        udp_duplicate_course_ids_df = pd.DataFrame({
+            'canvas_id': [2000000],
+            'count': [2]
+        })
+
+        query_dict = QUERIES['udw_duplicate_course_ids']
+        # Test
+        checks_result = validate.run_checks_on_output(query_dict['checks'], udp_duplicate_course_ids_df)
+        self.assertListEqual(['canvas_id', 'count', 'less_than_two'], checks_result.checked_output_df.columns.to_list())
+        self.assertListEqual([2000000, 2, False], checks_result.checked_output_df.loc[0].to_list())
+        self.assertTrue(checks_result.flags == ['RED'])
+        result_text = validate.generate_result_text(query_dict['query_name'], checks_result.checked_output_df)
+        self.assertIn('<-- "less_than_two" condition failed', result_text)
 
 
     def test_unizin_metadata_check(self):
