@@ -6,7 +6,7 @@
 import json, logging, os, sys
 from collections import namedtuple
 from datetime import datetime
-from typing import cast, TypedDict, Union
+from typing import cast, Union
 from urllib.parse import quote_plus
 
 # Third-party modules
@@ -88,11 +88,6 @@ def calculate_table_counts_for_db(table_names: list[str], db_conn_obj: Connectio
     table_counts_df = pd.concat(table_count_dfs)
     table_counts_df = table_counts_df[['table_name', 'record_count']]
     return table_counts_df
-
-
-class TableDuplicateIdCount(TypedDict):
-    table_name: str
-    count: int
 
 
 def execute_query_and_write_to_csv(
