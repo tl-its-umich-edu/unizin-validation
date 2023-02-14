@@ -152,14 +152,16 @@ QUERIES: QueryDict = {
         'query_name': 'UDW Duplicate Assignment IDs',
         'type': 'standard',
         'query': '''
-            select c.canvas_id, count(c.canvas_id)
-            from course_dim c
+            select a.canvas_id, count(a.canvas_id)
+            from assignment_dim a
+            left join course_dim c
+                on c.id=a.course_id
             left join enrollment_term_dim t
                 on t.id=c.enrollment_term_id
-            where c.workflow_state != 'deleted'
+            where a.workflow_state != 'deleted'
                 and t.date_start <= current_timestamp
                 and t.date_start + interval '120 days' >= current_timestamp
-            group by c.canvas_id
+            group by a.canvas_id
             having count(*) > 1;
         ''',
         'checks': {
