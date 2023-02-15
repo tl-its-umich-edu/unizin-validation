@@ -26,21 +26,19 @@ class StandardQueryData(QueryData):
     query: str
 
 
-class TableCountsQueryData(QueryData):
+class TableRecordCountsQueryData(QueryData):
+    type: Literal['table_record_counts']
     tables: list[str]
 
-
-class RecordCountsQueryData(TableCountsQueryData):
-    type: Literal['table_record_counts']
 
 
 class QueryDict(TypedDict):
     udw_number_of_courses_by_term: StandardQueryData
     udw_unizin_metadata: StandardQueryData
-    udw_table_counts: RecordCountsQueryData
+    udw_table_counts: TableRecordCountsQueryData
     udw_duplicate_course_ids: StandardQueryData
     udw_duplicate_assignment_ids: StandardQueryData
-    udp_context_store_view_counts: RecordCountsQueryData
+    udp_context_store_view_counts: TableRecordCountsQueryData
 
 
 QueryName = Literal[
