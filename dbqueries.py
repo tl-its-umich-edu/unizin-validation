@@ -123,7 +123,7 @@ QUERIES: QueryDict = {
     'udw_duplicate_course_ids': {
         'output_file_name': 'udw_duplicate_course_ids.csv',
         'data_source': 'UDW',
-        'query_name': 'UDW Duplicate Course IDs',
+        'query_name': 'UDW Duplicate Course IDs in Active Term(s)',
         'type': 'standard',
         'query': '''
             select c.canvas_id, count(c.canvas_id)
@@ -147,7 +147,7 @@ QUERIES: QueryDict = {
     'udw_duplicate_assignment_ids': {
         'output_file_name': 'udw_duplicate_assignment_ids.csv',
         'data_source': 'UDW',
-        'query_name': 'UDW Duplicate Assignment IDs',
+        'query_name': 'UDW Duplicate Assignment IDs in Active Term(s)',
         'type': 'standard',
         'query': '''
             select a.canvas_id, count(a.canvas_id)
