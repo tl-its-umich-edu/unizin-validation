@@ -17,7 +17,7 @@ from sqlalchemy.engine import Connection, Engine
 
 # Local modules
 from data_sources import DataSourceName, DataSource
-from dbqueries import CheckData, QUERIES, StandardQueryData, TableCountsQueryData
+from dbqueries import CheckData, QUERIES, StandardQueryData, TableRecordCountsQueryData
 from jobs import JobName, JOBS
 
 
@@ -81,7 +81,7 @@ def calculate_table_counts_for_db(table_names: list[str], db_conn_obj: Connectio
     table_count_dfs = []
     for table_name in table_names:
         count = pd.read_sql(f"""
-            SELECT COUNT(*) AS record_count FROM {table_name};
+            select count(*) as record_count from {table_name};
         """, db_conn_obj)
         count_df = count.assign(**{"table_name": table_name})
         table_count_dfs.append(count_df)
@@ -91,7 +91,7 @@ def calculate_table_counts_for_db(table_names: list[str], db_conn_obj: Connectio
 
 
 def execute_query_and_write_to_csv(
-    query_dict: Union[StandardQueryData, TableCountsQueryData], db_conn_obj: Connection
+    query_dict: Union[StandardQueryData, TableRecordCountsQueryData], db_conn_obj: Connection
 ) -> pd.DataFrame:
     # All output_dfs should be key-value pairs (two columns)
     out_file_path = OUT_DIR + query_dict["output_file_name"]
@@ -99,8 +99,8 @@ def execute_query_and_write_to_csv(
         case "standard":
             query_dict = cast(StandardQueryData, query_dict)
             output_df = pd.read_sql(query_dict["query"], db_conn_obj)
-        case "table_counts":
-            query_dict = cast(TableCountsQueryData, query_dict)
+        case "table_record_counts":
+            query_dict = cast(TableRecordCountsQueryData, query_dict)
             output_df = calculate_table_counts_for_db(query_dict["tables"], db_conn_obj)
         case _:
             logger.error(f"{query_dict['type']} is not currently a valid query type option.")

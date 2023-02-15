@@ -26,22 +26,27 @@ class StandardQueryData(QueryData):
     query: str
 
 
-class TableCountsQueryData(QueryData):
-    type: Literal['table_counts']
+class TableRecordCountsQueryData(QueryData):
+    type: Literal['table_record_counts']
     tables: list[str]
+
 
 
 class QueryDict(TypedDict):
     udw_number_of_courses_by_term: StandardQueryData
     udw_unizin_metadata: StandardQueryData
-    udw_table_counts: TableCountsQueryData
-    udp_context_store_view_counts: TableCountsQueryData
+    udw_table_counts: TableRecordCountsQueryData
+    udw_duplicate_course_ids: StandardQueryData
+    udw_duplicate_assignment_ids: StandardQueryData
+    udp_context_store_view_counts: TableRecordCountsQueryData
 
 
 QueryName = Literal[
     'udw_number_of_courses_by_term',
     'udw_unizin_metadata',
     'udw_table_counts',
+    'udw_duplicate_course_ids',
+    'udw_duplicate_assignment_ids',
     'udp_context_store_view_counts'
 ]
 
@@ -49,6 +54,7 @@ QueryName = Literal[
 # Check functions
 
 NOT_ZERO: Callable[[int], bool] = (lambda x: x != 0)
+LESS_THAN_TWO: Callable[[int], bool] = (lambda x: x < 2)
 LESS_THAN_TWO_DAYS: Callable[[str], bool] = (lambda x: (datetime.now(tz=timezone.utc) - datetime.fromisoformat(x)).days < 2)
 
 # Queries configuration
@@ -94,7 +100,7 @@ QUERIES: QueryDict = {
         'output_file_name': 'udw_table_counts.csv',
         'data_source': 'UDW',
         'query_name': 'UDW Table Record Counts',
-        'type': 'table_counts',
+        'type': 'table_record_counts',
         'tables': [
             'ASSIGNMENT_DIM',
             'COURSE_DIM',
@@ -114,11 +120,61 @@ QUERIES: QueryDict = {
             }
         }
     },
+    'udw_duplicate_course_ids': {
+        'output_file_name': 'udw_duplicate_course_ids.csv',
+        'data_source': 'UDW',
+        'query_name': 'UDW Duplicate Course IDs in Active Term(s)',
+        'type': 'standard',
+        'query': '''
+            select c.canvas_id, count(c.canvas_id)
+            from course_dim c
+            left join enrollment_term_dim t
+                on t.id=c.enrollment_term_id
+            where c.workflow_state != 'deleted'
+                and t.date_start <= current_timestamp
+                and t.date_start + interval '120 days' >= current_timestamp
+            group by c.canvas_id
+            having count(*) > 1;
+        ''',
+        'checks': {
+            'less_than_two': {
+                'color': 'RED',
+                'condition': LESS_THAN_TWO,
+                'rows_to_ignore': []
+            }
+        }
+    },
+    'udw_duplicate_assignment_ids': {
+        'output_file_name': 'udw_duplicate_assignment_ids.csv',
+        'data_source': 'UDW',
+        'query_name': 'UDW Duplicate Assignment IDs in Active Term(s)',
+        'type': 'standard',
+        'query': '''
+            select a.canvas_id, count(a.canvas_id)
+            from assignment_dim a
+            left join course_dim c
+                on c.id=a.course_id
+            left join enrollment_term_dim t
+                on t.id=c.enrollment_term_id
+            where a.workflow_state != 'deleted'
+                and t.date_start <= current_timestamp
+                and t.date_start + interval '120 days' >= current_timestamp
+            group by a.canvas_id
+            having count(*) > 1;
+        ''',
+        'checks': {
+            'less_than_two': {
+                'color': 'RED',
+                'condition': LESS_THAN_TWO,
+                'rows_to_ignore': []
+            }
+        }
+    },
     'udp_context_store_view_counts': {
         'output_file_name': 'udp_context_store_view_counts.csv',
         'data_source': 'UDP_Context_Store',
         'query_name': 'UDP Context Store View Record Counts',
-        'type': 'table_counts',
+        'type': 'table_record_counts',
         'tables': [
             'entity.learner_activity',
             'entity.course_offering',
