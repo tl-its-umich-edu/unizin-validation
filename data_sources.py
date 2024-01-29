@@ -16,4 +16,4 @@ class DataSource(TypedDict):
     params: DatabaseParams
 
 
-DataSourceName = Literal['UDW', 'UDP_Context_Store']
+DataSourceName = Literal['UDP_Context_Store']

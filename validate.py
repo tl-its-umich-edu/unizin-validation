@@ -162,8 +162,8 @@ if __name__ == "__main__":
         else:
             raise Exception(f'First argument must be one of the following: {", ".join(JOBS.keys())}')
     else:
-        # The default job is the UDW Daily Status Report.
-        job_key = "UDW"
+        # The default job is the UDP Daily Status Report.
+        job_key = "UDP"
 
     job = JOBS[job_key]
     job_name = job["full_name"]

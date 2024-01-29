@@ -2,16 +2,6 @@
     "LOG_LEVEL": "WARNING",
     "/*  Fill in values for database host, port, name, user, and password for each data source!": "*/",
     "DATA_SOURCES" : {
-        "UDW": {
-            "type": "PostgreSQL",
-            "params": {
-                "host": "",
-                "port": "",
-                "name": "",
-                "user": "",
-                "password": ""
-            }
-        },
         "UDP_Context_Store": {
             "type": "PostgreSQL",
             "params": {
