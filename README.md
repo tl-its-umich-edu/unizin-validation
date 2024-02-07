@@ -3,7 +3,7 @@
 ## Overview
 
 The unizin-validation project contains a program written in Python that attempts to ensure Canvas data was successfully
-loaded each night into Unizin data sources, including the Unizin Data Warehouse (UDW) and the Unizin Data Platform (UDP).
+loaded each night into Unizin data sources, including the Unizin Data Platform (UDP).
 The program does this by running SQL queries against the data sources and performing basic checks on the results to detect
 irregularities. The queries and checks used are defined in `dbqueries.py`. CSV files with the query results are generated
 as part of the workflow.
@@ -55,9 +55,6 @@ To install and run the validation program using a Python virtual environment, do
     python validate.py
     ```
 
-    Optionally, you can specify one of two pre-defined jobs -- `UDW` or `Unizin` -- as an additional option.
-    The default job value is `UDW`. The `Unizin` job includes an additional query and check against the UDP Context Store.
-
 CSV files containing the query results will be written to the value of the `OUT_DIR` configuration variable
 (the default is the `data` directory).
 
@@ -85,13 +82,8 @@ where `~` is your user's home directory.
 
 4. Run one of the job services
     ```sh
-    # For the UDW job
-    docker compose run udw
     # For the UDP job
     docker compose run udp
-    # For the Unizin job
-    # (This includes all UDW and UDP queries)
-    docker compose run unizin
     ```
 
 CSV files containing the query results will be written to the `~/data/unizin-validation` directory on your machine.

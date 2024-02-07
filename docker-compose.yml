@@ -10,23 +10,13 @@ x-job-base:
     - ENV_FILE=config/env.json
 
 services:
-  udw:
+  udp:
     << : *job-base
     image: unizin-validation-image
     build:
       context: .
-    command: ["python", "validate.py", "UDW"]
-    container_name: unizin-validation-udw
-  udp:
-    << : *job-base
-    image: unizin-validation-image
     command: ["python", "validate.py", "UDP"]
     container_name: unizin-validation-udp
-  unizin:
-    << : *job-base
-    image: unizin-validation-image
-    command: ["python", "validate.py", "Unizin"]
-    container_name: unizin-validation-unizin
   test:
     image: unizin-validation-image
     volumes:
