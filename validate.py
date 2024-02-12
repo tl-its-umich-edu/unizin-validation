@@ -116,7 +116,8 @@ def run_checks_on_output(checks_dict: dict[str, CheckData], output_df) -> Checks
     for check_name in checks_dict.keys():
         check = checks_dict[check_name]
         check_func = check['condition']
-        output_df[check_name] = output_df.iloc[:, 1]
+        # If two columns not given, default to first column as the value to check
+        output_df[check_name] = output_df.iloc[:, 1] if output_df.shape[1] > 1 else output_df.iloc[:, 0] 
         if len(check['rows_to_ignore']) > 0:
             first_column = output_df.columns[0]
             row_indexes_to_ignore = output_df[output_df[first_column].isin(check['rows_to_ignore'])].index.to_list()
@@ -131,14 +132,14 @@ def run_checks_on_output(checks_dict: dict[str, CheckData], output_df) -> Checks
 
 def generate_result_text(query_name: str, checked_query_output_df: pd.DataFrame) -> str:
     columns = checked_query_output_df.columns
-    result_text = f"{columns[0]} : {columns[1]}\n"
+    result_text = f"{columns[0]} : {columns[1]}\n" if len(columns) > 2 else f"{columns[0]}\n" 
     total_flags = 0
     for row_tup in checked_query_output_df.iterrows():
         row = row_tup[1]
-        result_text += f"{row[0]} : {row[1]}"
+        result_text += f"{row[0]} : {row[1]}" if len(columns) > 2 else f"{row[0]}"
         # Generate flag labels for check failures
         row_flag_labels = []
-        for index, value in row[2:].items():
+        for index, value in row[-1:].items(): # Last column is the check result
             if value is False:
                 row_flag_labels.append(f'"{index}" condition failed')
         if len(row_flag_labels) > 0:

@@ -34,10 +34,12 @@ class TableRecordCountsQueryData(QueryData):
 
 class QueryDict(TypedDict):
     udp_context_store_view_counts: TableRecordCountsQueryData
+    udp_learner_activity_updated: StandardQueryData
 
 
 QueryName = Literal[
-    'udp_context_store_view_counts'
+    'udp_context_store_view_counts',
+    'udp_learner_activity_updated'
 ]
 
 
@@ -45,7 +47,7 @@ QueryName = Literal[
 
 NOT_ZERO: Callable[[int], bool] = (lambda x: x != 0)
 LESS_THAN_TWO: Callable[[int], bool] = (lambda x: x < 2)
-LESS_THAN_TWO_DAYS: Callable[[str], bool] = (lambda x: (datetime.now(tz=timezone.utc) - datetime.fromisoformat(x)).days < 2)
+LESS_THAN_TWO_DAYS: Callable[[str], bool] = (lambda x: (datetime.now(tz=timezone.utc) - x.replace(tzinfo=timezone.utc)).days < 2)
 
 # Queries configuration
 
@@ -68,6 +70,25 @@ QUERIES: QueryDict = {
             'not_zero': {
                 'color': 'YELLOW',
                 'condition': NOT_ZERO,
+                'rows_to_ignore': []
+            }
+        }
+    },
+    'udp_learner_activity_updated': {
+        'output_file_name': 'udp_learner_activity_updated.csv',
+        'data_source': 'UDP_Context_Store',
+        'query_name': 'UDP Learner Activity Updated',
+        'type': 'standard',
+        'query': """
+            SELECT
+                max(updated_date) as most_recent_activity_date
+            FROM
+                entity.learner_activity
+        """,
+        'checks': {
+            'less_than_two_days': {
+                'color': 'YELLOW',
+                'condition': LESS_THAN_TWO_DAYS,
                 'rows_to_ignore': []
             }
         }

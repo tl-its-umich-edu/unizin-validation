@@ -31,7 +31,8 @@ JOBS: JobDict = {
     'UDP': {
         "full_name": "UDP Daily Status Report",
         "queries": [
-            "udp_context_store_view_counts"
+            "udp_context_store_view_counts",
+            "udp_learner_activity_updated"
         ]
     }
 }
