@@ -77,7 +77,7 @@ QUERIES: QueryDict = {
     'udp_learner_activity_updated': {
         'output_file_name': 'udp_learner_activity_updated.csv',
         'data_source': 'UDP_Context_Store',
-        'query_name': 'UDP Learner Activity Updated',
+        'query_name': 'UDP Freshness Indicator: Latest Updated Date In UDP Learner Activity Table',
         'type': 'standard',
         'query': """
             SELECT
