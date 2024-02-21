@@ -35,5 +35,22 @@ class TestFlagRaising(unittest.TestCase):
 
         result_text = validate.generate_result_text(query_dict['query_name'], checks_result.checked_output_df)
         self.assertIn('<-- "not_zero" condition failed', result_text)
+    
+    def test_udp_learner_activity_updated_check(self):
+        # Set up
+        delta_obj = timedelta(days=-3)
+        three_days_ago = datetime.now(tz=timezone.utc) + delta_obj
+        udp_learner_activity_df = pd.DataFrame({
+            'updated_date': [three_days_ago.replace(tzinfo=None)]
+        })
+        query_dict = QUERIES['udp_learner_activity_updated']
+
+        # Test
+        checks_result = validate.run_checks_on_output(query_dict['checks'], udp_learner_activity_df)
+        self.assertListEqual(['updated_date', 'less_than_two_days'], checks_result.checked_output_df.columns.to_list())
+        self.assertTrue(checks_result.flags == ['YELLOW'])
+
+        result_text = validate.generate_result_text(query_dict['query_name'], checks_result.checked_output_df)
+        self.assertIn('<-- "less_than_two_days" condition failed', result_text)
 
 unittest.main()
